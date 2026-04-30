@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grab It! - Primary Chinese Edition</title>
     
-    <!-- MediaPipe Hands -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
 
@@ -14,39 +13,39 @@
             --p1: #ff4757; --p2: #ffa502; --p3: #2ed573;
             --p4: #1e90ff; --p5: #3742fa; --p6: #7d5fff;
         }
-        body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; color: white; }
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Arial Rounded MT Bold', sans-serif; color: white; }
         
-        /* Menu */
         #menu {
             position: absolute; inset: 0; z-index: 100;
-            background: radial-gradient(circle at center, #2f3542, #000);
+            background: radial-gradient(circle, #2f3542, #000);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
         .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px; }
         .lvl-btn {
-            width: 120px; height: 120px; border-radius: 20px; border: none;
-            color: white; font-size: 32px; font-weight: bold; cursor: pointer;
-            transition: 0.2s; box-shadow: 0 8px 0 rgba(0,0,0,0.3);
+            width: 130px; height: 130px; border-radius: 25px; border: none;
+            color: white; font-size: 35px; font-weight: bold; cursor: pointer;
+            transition: 0.2s; box-shadow: 0 8px 0 rgba(0,0,0,0.4);
         }
-        .lvl-btn:hover { transform: scale(1.1); filter: brightness(1.2); }
+        .lvl-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
 
-        /* Game HUD */
         #hud {
             position: absolute; top: 0; width: 100%; display: flex; 
             flex-direction: column; align-items: center; z-index: 50; pointer-events: none;
         }
         #target-pinyin {
-            background: rgba(0,0,0,0.85); padding: 10px 60px;
-            border-radius: 0 0 30px 30px; border: 4px solid #fff;
-            font-size: 55px; color: #fff; text-shadow: 0 0 10px #000;
-            margin-top: 0;
+            background: rgba(0,0,0,0.85); padding: 15px 60px;
+            border-radius: 0 0 40px 40px; border: 5px solid #fff;
+            font-size: 65px; color: #fff; text-shadow: 0 0 10px #000;
         }
         #score-box {
-            background: rgba(0,0,0,0.6); padding: 8px 25px; border-radius: 50px;
-            margin-top: 10px; font-size: 24px; border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(0,0,0,0.6); padding: 10px 30px; border-radius: 50px;
+            margin-top: 15px; font-size: 28px; border: 1px solid white;
         }
 
-        #status { position: absolute; bottom: 20px; color: #555; width: 100%; text-align: center; }
+        #loading-screen {
+            position: fixed; inset: 0; background: #000; z-index: 200;
+            display: flex; align-items: center; justify-content: center; font-size: 24px;
+        }
 
         canvas { display: block; width: 100vw; height: 100vh; }
         video { display: none; }
@@ -55,16 +54,18 @@
 </head>
 <body>
 
-<div id="menu">
-    <h1 style="font-size: 50px; margin-bottom: 0;">GRAB IT! 🖐️</h1>
-    <p style="color: #ced4da; margin-bottom: 30px;">Pinch to grab the correct Chinese word!</p>
+<div id="loading-screen">Loading AI Hand Tracker...</div>
+
+<div id="menu" class="hidden">
+    <h1 style="font-size: 55px; margin: 0; color: #fff;">GRAB IT! 🖐️</h1>
+    <p style="color: #ccc; font-size: 20px;">Move your hand and <b>Grip/Fist</b> to grab characters!</p>
     <div class="grid">
-        <button class="lvl-btn" style="background:var(--p1)" onclick="initGame('P1')">P1</button>
-        <button class="lvl-btn" style="background:var(--p2)" onclick="initGame('P2')">P2</button>
-        <button class="lvl-btn" style="background:var(--p3)" onclick="initGame('P3')">P3</button>
-        <button class="lvl-btn" style="background:var(--p4)" onclick="initGame('P4')">P4</button>
-        <button class="lvl-btn" style="background:var(--p5)" onclick="initGame('P5')">P5</button>
-        <button class="lvl-btn" style="background:var(--p6)" onclick="initGame('P6')">P6</button>
+        <button class="lvl-btn" style="background:var(--p1)" onclick="start('P1')">P1</button>
+        <button class="lvl-btn" style="background:var(--p2)" onclick="start('P2')">P2</button>
+        <button class="lvl-btn" style="background:var(--p3)" onclick="start('P3')">P3</button>
+        <button class="lvl-btn" style="background:var(--p4)" onclick="start('P4')">P4</button>
+        <button class="lvl-btn" style="background:var(--p5)" onclick="start('P5')">P5</button>
+        <button class="lvl-btn" style="background:var(--p6)" onclick="start('P6')">P6</button>
     </div>
 </div>
 
@@ -73,27 +74,23 @@
     <div id="score-box">Score: 0</div>
 </div>
 
-<div id="status">Loading AI Hand Tracking...</div>
-
 <video id="webcam" playsinline></video>
 <canvas id="gameCanvas"></canvas>
 
 <script>
-// Vocabulary Database (Approx 100 per level curated)
-const DATA = {
-    P1: "一|yī,二|èr,三|sān,四|sì,五|wǔ,六|liù,七|qī,八|bā,九|jiǔ,十|shí,口|kǒu,耳|ěr,目|mù,手|shǒu,足|zú,大|dà,小|xiǎo,多|duō,少|shǎo,人|rén,头|tóu,长|cháng,短|duǎn,早|zǎo,晚|wǎn,去|qù,来|lái,上|shàng,下|xià,里|lǐ,外|wài,坐|zuò,立|lì,说|shuō,读|dú,写|xiě,看|kàn,见|jiàn,开|kāi,关|guān,红|hóng,黄|huáng,蓝|lán,绿|lǜ,白|bái,黑|hēi,天|tiān,地|dì,山|shān,水|shuǐ,火|huǒ,土|tǔ,木|mù,云|yún,雨|yǔ,风|fēng,爸|bà,妈|mā,哥|gē,姐|jiě,弟|dì,妹|mèi,爱|ài,家|jiā,学|xué,生|shēng,师|shī,友|yǒu,园|yuán,花|huā,月|yuè,心|xīn,春|chūn,夏|xià,秋|qiū,冬|dōng,中|zhōng,国|guó,书|shū,笔|bǐ,几|jǐ,个|gè,只|zhī,面|miàn,牙|yá,毛|máo,皮|pí,太|tài,阳|yáng,儿|ér,子|zi,鸟|niǎo,鱼|yú,虫|chóng,草|cǎo",
-    P2: "刚才|gāng cái,帮忙|bāng máng,漂亮|piào liang,总是|zǒng shì,应该|yīng gāi,检查|jiǎn chá,注意|zhù yì,故事|gù shi,准备|zhǔn bèi,发现|fā xiàn,干净|gān jìng,身体|shēn tǐ,比较|bǐ jiào,休息|xiū xi,已经|yǐ jīng,决定|jué dìng,表演|biǎo yǎn,努力|nǔ lì,进步|jìn bù,礼物|lǐ wù,快乐|kuài lè,附近|fù jìn,明白|míng bai,照顾|zhào gù,奇怪|qí guài,虽然|suī rán,其实|qí shí,愿意|yuàn yì,希望|xī wàng,练习|liàn xí,突然|tū rán,办法|bàn fǎ,欢迎|huān yíng,有趣|yǒu qù,方便|fāng biàn,不仅|bù jǐn,而且|ér qiě,保护|bǎo hù,浪费|làng fèi,环境|huán jìng,改变|gǎi biàn,精彩|jīng cǎi,感谢|gǎn xiè,极了|jí le,离开|lí kāi,意思|yì si,认真|rèn zhēn,习惯|xí guàn,健康|jiàn kāng,强壮|qiáng zhuàng,颜色|yán sè,害怕|hài pà,勇敢|yǒng gǎn,难过|nán guò,着急|zháo jí,医生|yī shēng,回答|huí dá,声音|shēng yīn,经常|jīng cháng,重要|zhòng yào,时间|shí jiān,觉得|jué de,睡觉|shuì jiào,水果|shuǐ guǒ,各种|gè zhǒng,运动|yùn dòng,踢球|tī qiú,跳绳|tiào shéng,游戏|yóu xì,觉得|jué de,打算|dǎ suàn,商场|shāng chǎng,知道|zhī dào,还是|hái shì,告诉|gào su,特别|tè bié,简单|jiǎn dān,清楚|qīng chu",
-    P3: "介绍|jiè shào,刚|gāng,才|cái,不仅|bù jǐn,由于|yóu yú,尤其|yóu qí,甚至|shèn zhì,核心|hé xīn,尽管|jǐn guǎn,难道|nán dào,通过|tōng guò,既然|jì rán,终于|zhōng yú,果然|guǒ rán,竟然|jìng rán,依然|yī rán,虽然|suī rán,必须|bì xū,不必|bù bì,大概|dà gài,也许|yě xǔ,几乎|jī hū,稍微|shāo wēi,互相|hù xiāng,各自|gè zì,首先|shǒu xiān,其次|qí cì,最后|zuì hòu,反正|fǎn zhèng,难怪|nán guài,幸亏|xìng kuī,索性|suǒ xìng,宁愿|nìng yuàn,反而|fǎn ér,顺便|shùn biàn,赶快|gǎn kuài,立刻|lì kè,连忙|lián máng,渐渐|jiàn jiàn,偷偷|tōu tōu,悄悄|qiāo qiāo,刚好|gāng hǎo,恰好|qià hǎo,千万|qiān wàn,大约|dà yuē,也许|yě xǔ,假如|jiǎ rú,要是|yào shi,即使|jí shǐ,哪怕|nǎ pà,既然|jì rán,于是|yú shì,只要|zhǐ yào,只有|zhǐ yǒu,除非|chú fēi,不论|bù lùn,不管|bù guǎn,凡是|fán shì,不仅|bù jǐn,反而|fǎn ér,此外|cǐ wài,另外|lìng wài,况且|kuàng qiě,由于|yóu yú,因此|yīn cǐ,综上|zōng shàng,可见|kě jiàn,仍然|réng rán,必定|bì dìng,未必|wèi bì,必定|bì dìng,何必|hé bì,除非|chú fēi,但是|dàn shì,而且|ér qiě,还是|hái shì,由于|yóu yú,以便|yǐ biàn,导致|dǎo zhì,否则|fǒu zé,除非|chú fēi,哪怕|nǎ pà,纵然|zòng rán,即便|jí biàn",
-    P4: "拒绝|jù jué,挑选|tiāo xuǎn,仔细|zǐ xì,清楚|qīng chu,记录|jì lù,建议|jiàn yì,羡慕|xiàn mù,谦虚|qiān xū,骄傲|jiāo ào,压力|yā lì,确定|què dìng,简直|jiǎn zhí,负责|fù zé,困难|kùn nan,克服|kè fú,勇气|yǒng qì,智慧|zhì huì,珍惜|zhēn xī,判断|pàn duàn,思考|sī kǎo,讨论|tǎo lùn,项目|xiàng mù,必定|bì dìng,虽然|suī rán,尽管|jǐn guǎn,关于|guān yú,对于|duì yú,按照|àn zhào,基于|jī yú,根据|gēn jù,至于|zhì yú,哪怕|nǎ pà,即便|jí biàn,既然|jì rán,因此|yīn cǐ,从而|cóng ér,基于|jī yú,直到|zhí dào,为了|wèi le,由于|yóu yú,因为|yīn wèi,所以|suǒ yǐ,既然|jì rán,于是|yú shì,虽然|suī rán,尽管|jǐn guǎn,但是|dàn shì,然而|rán ér,不过|bú guò,可是|kě shì,哪怕|nǎ pà,即使|jí shǐ,即便|jí biàn,哪怕|nǎ pà,固然|gù rán,虽然|suī rán,尽管|jǐn guǎn,不论|bù lùn,不管|bù guǎn,无论|wú lùn,凡是|fán shì,不仅|bù jǐn,不但|bú dàn,况且|kuàng qiě,甚至|shèn zhì,此外|cǐ wài,另外|lìng wài,总之|zǒng zhī,总之|zǒng zhī,综上|zōng shàng,可见|kě jiàn,由此可见|yóu cǐ kě jiàn,显然|xiǎn rán,当然|dāng rán,诚然|chéng rán,的确|dí què,果然|guǒ rán,竟然|jìng rán,居然|jū rán,难道|nán dào,其实|qí shí,本来|běn lái,也许|yě xǔ,恐怕|kǒng pà,大概|dà gài,大约|dà yuē",
-    P5: "坚持|jiān chí,鼓励|gǔ lì,克服|kè fú,羞愧|xiū kuì,勇敢|yǒng gǎn,勤奋|qín fèn,目标|mù biāo,配合|pèi hé,竞赛|jìng sài,探险|tàn xiǎn,防止|fáng zhǐ,建议|jiàn yì,记录|jì lù,吸引|xī yǐn,允许|yǔn xǔ,祝贺|zhù hè,宽容|kuān róng,放弃|fàng qì,解释|jiě shì,顺利|shùn lì,智慧|zhì huì,积极|jī jí,锻炼|duàn liàn,严格|yán gé,畢竟|bì jìng,核心|hé xīn,暂时|zàn shí,假如|jiǎ rú,要是|yào shi,即使|jí shǐ,哪怕|nǎ pà,于是|yú shì,其中|qí zhōng,由于|yóu yú,因此|yīn cǐ,从而|cóng ér,尽管|jǐn guǎn,无论|wú lùn,凡是|fán shì,重点|zhòng diǎn,根本|gēn běn,关键|guān jiàn,究竟|jiū jìng,恐怕|kǒng pà,未必|wèi bì,何必|hé bì,必定|bì dìng,显然|xiǎn rán,果然|guǒ rán,甚至|shèn zhì,总之|zǒng zhī,基于|jī yú,除非|chú fēi,假如|jiǎ rú,由于|yóu yú,甚至|shèn zhì,尤其|yóu qí,当然|dāng rán,反而|fǎn ér,此外|cǐ wài,固然|gù rán,由于|yóu yú,既然|jì rán,因此|yīn cǐ,可见|kě jiàn,难怪|nán guài,不论|bù lùn,不管|bù guǎn,无论|wú lùn,凡是|fán shì,甚至|shèn zhì,尤其|yóu qí,简直|jiǎn zhí,毕竟|bì jìng,既然|jì rán,哪怕|nǎ pà,即使|jí shǐ,只要|zhǐ yào,只有|zhǐ yǒu,除非|chú fēi,与其|yǔ qí,不如|bù rú,宁愿|nìng yuàn,宁可|nìng kě,不但|bú dàn,不仅|bù jǐn,而且|ér qiě,并且|bìng qiě,况且|kuàng qiě,何况|hé kuàng",
-    P6: "鞠躬|jū gōng,和睦|hé mù,矛盾|máo dùn,关键|guān jiàn,遗憾|yí hàn,犹豫|yóu yù,复杂|fù zá,谨慎|jǐn shèn,智慧|zhì huì,挑战|tiǎo zhàn,奋斗|fèn dòu,既然|jì rán,毕竟|bì jìng,由于|yóu yú,不仅|bù jǐn,反而|fǎn ér,何况|hé kuàng,除非|chú fēi,假如|jiǎ rú,按照|àn zhào,基于|jī yú,针对|zhēn duì,关于|guān yú,随着|suí zhe,甚至|shèn zhì,尤其|yóu qí,其中|qí zhōng,难怪|nán guài,幸亏|xìng kuī,千万|qiān wàn,未必|wèi bì,何必|hé bì,总之|zǒng zhī,积极|jī jí,消极|xiāo jí,悲观|bēi guān,乐观|lè guān,勤奋|qín fèn,懒惰|lǎn duò,谦虚|qiān xū,骄傲|jiāo ào,吝啬|lìn sè,大方|dà fāng,温柔|wēn róu,粗鲁|cū lǔ,诚实|chéng shí,虚伪|xū wěi,坚定|jiān dìng,动摇|dòng yáo,平凡|píng fán,卓越|zhuó yuè,核心|hé xīn,根本|gēn běn,简直|jiǎn zhí,毕竟|bì jìng,哪怕|nǎ pà,纵然|zòng rán,即便|jí biàn,不仅|bù jǐn,况且|kuàng qiě,甚至|shèn zhì,果然|guǒ rán,由于|yóu yú,从而|cóng ér,可见|kě jiàn,由于|yóu yú,因此|yīn cǐ,从而|cóng ér,既然|jì rán,于是|yú shì,虽然|suī rán,尽管|jǐn guǎn,只要|zhǐ yào,只有|zhǐ yǒu,除非|chú fēi,即便|jí biàn,哪怕|nǎ pà,既然|jì rán,由于|yóu yú,因此|yīn cǐ,由于|yóu yú,不仅|bù jǐn,甚至|shèn zhì,反而|fǎn ér,何况|hé kuàng,除非|chú fēi,基于|jī yú,显然|xiǎn rán,当然|dāng rán"
+// Vocabulary - Full P1-P6 curated (Compressed lists)
+const VOCAB_DATA = {
+    P1: "一|yī,二|èr,三|sān,十|shí,大|dà,小|xiǎo,多|duō,少|shǎo,手|shǒu,足|zú,口|kǒu,耳|ěr,目|mù,人|rén,头|tóu,去|qù,来|lái,上|shàng,下|xià,里|lǐ,外|wài,写|xiě,读|dú,书|shū,笔|bǐ,学|xué,生|shēng,师|shī,友|yǒu,爸|bà,妈|mā,哥|gē,姐|jiě,弟|dì,妹|mèi,爱|ài,家|jiā,校|xiào,早|zǎo,晚|wǎn,天|tiān,地|dì,山|shān,水|shuǐ,火|huǒ,石|shí,木|mù,花|huā,草|cǎo,云|yún,雨|yǔ,鱼|yú,鸟|niǎo,虫|chóng,坐|zuò,立|lì,走|zǒu,跑|pǎo,跳|tiào,笑|xiào,哭|kū,叫|jiào,听|tīng,说|shuō,看|kàn,见|jiàn,开|kāi,关|guān,红|hóng,黄|huáng,蓝|lán,绿|lǜ,白|bái,黑|hēi,长|cháng,短|duǎn,牙|yá,发|fà,皮|pí,心|xīn,春|chūn,夏|xià,秋|qiū,冬|dōng,中|zhōng,国|guó,个|gè,只|zhī,月|yuè,亮|liàng,星|xīng,日|rì,拍|pāi,打|dǎ,拿|ná,放|fàng,有|yǒu,无|wú",
+    P2: "刚才|gāng cái,应该|yīng gāi,帮忙|bāng máng,照顾|zhào gù,已经|yǐ jīng,突然|tū rán,奇怪|qí guài,准备|zhǔn bèi,检查|jiǎn chá,注意|zhù yì,漂亮|piào liang,总是|zǒng shì,发现|fā xiàn,干净|gān jìng,身体|shēn tǐ,比较|bǐ jiào,休息|xiū xi,决定|jué dìng,表演|biǎo yǎn,进步|jìn bù,进步|jìn bù,礼物|lǐ wù,快乐|kuài lè,附近|fù jìn,明白|míng bai,愿望|yuàn wàng,练习|liàn xí,办法|bàn fǎ,欢迎|huān yíng,有趣|yǒu qù,方便|fāng biàn,保护|bǎo hù,浪费|làng fèi,环境|huán jìng,精彩|jīng cǎi,离开|lí kāi,认真|rèn zhēn,健康|jiàn kāng,礼貌|lǐ mào,颜色|yán sè,害怕|hài pà,勇敢|yǒng gǎn,医生|yī shēng,回答|huí dá,声音|shēng yīn,打算|dǎ suàn,森林|sēn lín,时间|shí jiān,苹果|píng guǒ,香蕉|xiāng jiāo,简单|jiǎn dān,清楚|qīng chu,礼物|lǐ wù,记得|jì de,互相|hù xiāng,甚至|shèn zhì,其实|qí shí,方便|fāng biàn,努力|nǔ lì,各种|gè zhǒng,商场|shāng chǎng,超市|chāo shì,觉得|jué de,运动|yùn dòng,经常|jīng cháng,参加|cān jiā,讨论|tǎo lùn,容易|róng yì,特别|tè bié,结束|jié shù,满意|mǎn yì,难过|nán guò,感冒|gǎn mào,水果|shuǐ guǒ,超市|chāo shì,打算|dǎ suàn,知道|zhī dào,故事|gù shi,发现|fā xiàn,明白|míng bai,改变|gǎi biàn,习惯|xí guàn,虽然|suī rán,由于|yóu yú,而且|ér qiě,不仅|bù jǐn,但是|dàn shì,最后|zuì hòu,其实|qí shí,只要|zhǐ yào,如果|rú guǒ,那么|nà me,告诉|gào su,大家|dà jiā,可爱|kě ài",
+    P3: "介绍|jiè shào,尤其|yóu qí,核心|hé xīn,尽管|jǐn guǎn,难道|nán dào,通过|tōng guò,既然|jì rán,终于|zhōng yú,果然|guǒ rán,竟然|jìng rán,依然|yī rán,虽然|suī rán,必须|bì xū,不必|bù bì,大概|dà gài,也许|yě xǔ,几乎|jī hū,稍微|shāo wēi,互相|hù xiāng,各自|gè zì,首先|shǒu xiān,其次|qí cì,最后|zuì hòu,反正|fǎn zhèng,难怪|nán guài,幸亏|xìng kuī,索性|suǒ xìng,宁愿|nìng yuàn,反而|fǎn ér,顺便|shùn biàn,赶快|gǎn kuài,立刻|lì kè,连忙|lián máng,渐渐|jiàn jiàn,偷偷|tōu tōu,悄悄|qiāo qiāo,刚好|gāng hǎo,恰好|qià hǎo,千万|qiān wàn,大约|dà yuē,也许|yě xǔ,假如|jiǎ rú,要是|yào shi,即使|jí shǐ,哪怕|nǎ pà,既然|jì rán,于是|yú shì,只要|zhǐ yào,只有|zhǐ yǒu,除非|chú fēi,不论|bù lùn,不管|bù guǎn,凡是|fán shì,不仅|bù jǐn,反而|fǎn ér,此外|cǐ wài,另外|lìng wài,况且|kuàng qiě,由于|yóu yú,因此|yīn cǐ,综上|zōng shàng,可见|kě jiàn,仍然|réng rán,必定|bì dìng,未必|wèi bì,必定|bì dìng,何必|hé bì,除非|chú fēi,但是|dàn shì,而且|ér qiě,还是|hái shì,由于|yóu yú,以便|yǐ biàn,导致|dǎo zhì,否则|fǒu zé,除非|chú fēi,哪怕|nǎ pà,纵然|zòng rán,即便|jí biàn,虽然|suī rán,由于|yóu yú,甚至|shèn zhì,既然|jì rán,总之|zǒng zhī,总之|zǒng zhī,总之|zǒng zhī,综上|zōng shàng,可见|kě jiàn,因此|yīn cǐ,可见|kě jiàn,所以|suǒ yǐ,可是|kě shì,但是|dàn shì,由于|yóu yú,竟然|jìng rán,居然|jū rán,难道|nán dào,何必|hé bì",
+    P4: "拒绝|jù jué,挑选|tiāo xuǎn,仔细|zǐ xì,清楚|qīng chu,记录|jì lù,建议|jiàn yì,羡慕|xiàn mù,谦虚|qiān xū,骄傲|jiāo ào,压力|yā lì,确定|què dìng,简直|jiǎn zhí,负责|fù zé,困难|kùn nan,克服|kè fú,勇气|yǒng qì,智慧|zhì huì,珍惜|zhēn xī,判断|pàn duàn,思考|sī kǎo,讨论|tǎo lùn,项目|xiàng mù,必定|bì dìng,虽然|suī rán,尽管|jǐn guǎn,关于|guān yú,对于|duì yú,按照|àn zhào,基于|jī yú,根据|gēn jù,至于|zhì yú,哪怕|nǎ pà,即便|jí biàn,既然|jì rán,因此|yīn cǐ,从而|cóng ér,基于|jī yú,直到|zhí dào,为了|wèi le,由于|yóu yú,因为|yīn wèi,所以|suǒ yǐ,既然|jì rán,于是|yú shì,虽然|suī rán,尽管|jǐn guǎn,但是|dàn shì,然而|rán ér,不过|bú guò,可是|kě shì,哪怕|nǎ pà,即使|jí shǐ,即便|jí biàn,哪怕|nǎ pà,固然|gù rán,虽然|suī rán,尽管|jǐn guǎn,不论|bù lùn,不管|bù guǎn,无论|wú lùn,凡是|fán shì,不仅|bù jǐn,不但|bú dàn,况且|kuàng qiě,甚至|shèn zhì,此外|cǐ wài,另外|lìng wài,总之|zǒng zhī,总之|zǒng zhī,综上|zōng shàng,可见|kě jiàn,由此可见|yóu cǐ kě jiàn,显然|xiǎn rán,当然|dāng rán,诚然|chéng rán,的确|dí què,果然|guǒ rán,竟然|jìng rán,居然|jū rán,难道|nán dào,其实|qí shí,本来|běn lái,也许|yě xǔ,恐怕|kǒng pà,大概|dà gài,大约|dà yuē,也许|yě xǔ,或者|huò zhě,还是|hái shì,尽管|jǐn guǎn,哪怕|nǎ pà,竟然|jìng rán,居然|jū rán,终于|zhōng yú,由于|yóu yú,因此|yīn cǐ,从而|cóng ér",
+    P5: "坚持|jiān chí,鼓励|gǔ lì,克服|kè fú,羞愧|xiū kuì,勇敢|yǒng gǎn,勤奋|qín fèn,目标|mù biāo,配合|pèi hé,竞赛|jìng sài,探险|tàn xiǎn,防止|fáng zhǐ,建议|jiàn yì,记录|jì lù,吸引|xī yǐn,允许|yǔn xǔ,祝贺|zhù hè,宽容|kuān róng,放弃|fàng qì,解释|jiě shì,顺利|shùn lì,智慧|zhì huì,积极|jī jí,锻炼|duàn liàn,严格|yán gé,畢竟|bì jìng,核心|hé xīn,暂时|zàn shí,假如|jiǎ rú,要是|yào shi,即使|jí shǐ,哪怕|nǎ pà,于是|yú shì,其中|qí zhōng,由于|yóu yú,因此|yīn cǐ,从而|cóng ér,尽管|jǐn guǎn,无论|wú lùn,凡是|fán shì,重点|zhòng diǎn,根本|gēn běn,关键|guān jiàn,究竟|jiū jìng,恐怕|kǒng pà,未必|wèi bì,何必|hé bì,必定|bì dìng,显然|xiǎn rán,果然|guǒ rán,甚至|shèn zhì,总之|zǒng zhī,基于|jī yú,除非|chú fēi,假如|jiǎ rú,由于|yóu yú,甚至|shèn zhì,尤其|yóu qí,当然|dāng rán,反而|fǎn ér,此外|cǐ wài,固然|gù rán,由于|yóu yú,既然|jì rán,因此|yīn cǐ,可见|kě jiàn,难怪|nán guài,不论|bù lùn,不管|bù guǎn,无论|wú lùn,凡是|fán shì,甚至|shèn zhì,尤其|yóu qí,简直|jiǎn zhí,毕竟|bì jìng,既然|jì rán,哪怕|nǎ pà,即使|jí shǐ,只要|zhǐ yào,只有|zhǐ yǒu,除非|chú fēi,与其|yǔ qí,不如|bù rú,宁愿|nìng yuàn,宁可|nìng kě,不但|bú dàn,不仅|bù jǐn,而且|ér qiě,并且|bìng qiě,况且|kuàng qiě,何况|hé kuàng,难道|nán dào,竟然|jìng rán,终于|zhōng yú,果然|guǒ rán,毕竟|bì jìng,暂时|zàn shí,尤其|yóu qí,哪怕|nǎ pà",
+    P6: "鞠躬|jū gōng,和睦|hé mù,矛盾|máo dùn,关键|guān jiàn,遗憾|yí hàn,犹豫|yóu yù,复杂|fù zá,谨慎|jǐn shèn,智慧|zhì huì,挑战|tiǎo zhàn,奋斗|fèn dòu,既然|jì rán,毕竟|bì jìng,由于|yóu yú,其实|qí shí,果然|guǒ rán,不仅|bù jǐn,而且|ér qiě,因此|yīn cǐ,反而|fǎn ér,何况|hé kuàng,除非|chú fēi,假如|jiǎ rú,按照|àn zhào,基于|jī yú,针对|zhēn duì,关于|guān yú,对于|duì yú,随着|suí zhe,甚至|shèn zhì,尤其|yóu qí,其中|qí zhōng,难怪|nán guài,幸亏|xìng kuī,千万|qiān wàn,未必|wèi bì,何必|hé bì,总之|zǒng zhī,积极|jī jí,消极|xiāo jí,悲观|bēi guān,乐观|lè guān,勤奋|qín fèn,懒惰|lǎn duò,谦虚|qiān xū,骄傲|jiāo ào,吝啬|lìn sè,大方|dà fāng,温柔|wēn róu,粗鲁|cū lǔ,诚实|chéng shí,虚伪|xū wěi,坚定|jiān dìng,动摇|dòng yáo,平凡|píng fán,卓越|zhuó yuè,核心|hé xīn,外围|wài wéi,根本|gēn běn,枝节|zhī jié,甚至|shèn zhì,反而|fǎn ér,固然|gù rán,由于|yóu yú,因此|yīn cǐ,既然|jì rán,哪怕|nǎ pà,即使|jí shǐ,除非|chú fēi,由于|yóu yú,导致|dǎo zhì,基于|jī yú,综上|zōng shàng,显然|xiǎn rán,竟然|jìng rán,由于|yóu yú,毕竟|bì jìng,哪怕|nǎ pà,纵然|zòng rán,即便|jí biàn,无论|wú lùn,不管|bù guǎn,不仅|bù jǐn,况且|kuàng qiě,甚至|shèn zhì,总之|zǒng zhī,果然|guǒ rán,竟然|jìng rán,复杂|fù zá,犹豫|yóu yù,谨慎|jǐn shèn,奋斗|fèn dòu,既然|jì rán"
 };
 
 const video = document.getElementById('webcam');
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-const targetPinyin = document.getElementById('target-pinyin');
-const scoreBox = document.getElementById('score-board');
 
 let gameActive = false;
 let currentLvl = "P1";
@@ -101,29 +98,25 @@ let score = 0;
 let deck = [];
 let target = null;
 let floatingWords = [];
-let pointer = { x: 0, y: 0, isGrabbing: false };
+let hand = { x: 0, y: 0, isGrabbing: false };
 let audioCtx = null;
 
 class Word {
-    constructor(char) {
-        this.char = char;
-        this.reset();
-    }
+    constructor(w) { this.char = w; this.reset(); }
     reset() {
         this.x = Math.random() * (window.innerWidth - 150) + 75;
-        this.y = Math.random() * (window.innerHeight - 250) + 200;
-        let s = 3.5 + (currentLvl.at(-1) * 0.7);
+        this.y = Math.random() * (window.innerHeight - 300) + 200;
+        let s = 3.5 + (currentLvl[1] * 0.7);
         this.vx = (Math.random() - 0.5) * s;
         this.vy = (Math.random() - 0.5) * s;
     }
     update() {
         this.x += this.vx; this.y += this.vy;
         if (this.x < 50 || this.x > window.innerWidth - 120) this.vx *= -1;
-        if (this.y < 180 || this.y > window.innerHeight - 50) this.vy *= -1;
+        if (this.y < 200 || this.y > window.innerHeight - 50) this.vy *= -1;
     }
     draw() {
-        ctx.font = 'bold 45px sans-serif';
-        ctx.fillStyle = "white";
+        ctx.font = 'bold 48px sans-serif'; ctx.fillStyle = "white";
         ctx.shadowColor = "black"; ctx.shadowBlur = 10;
         ctx.fillText(this.char, this.x, this.y);
         ctx.shadowBlur = 0;
@@ -133,38 +126,35 @@ class Word {
 function speak(t) {
     window.speechSynthesis.cancel();
     let m = new SpeechSynthesisUtterance(t);
-    m.lang = 'zh-CN'; m.rate = 0.85;
+    m.lang = 'zh-CN'; m.rate = 0.8;
     window.speechSynthesis.speak(m);
 }
 
 function playSfx(f) {
     if(!audioCtx) return;
     let o = audioCtx.createOscillator(), g = audioCtx.createGain();
-    o.frequency.value = f; 
-    g.gain.setValueAtTime(0.1, audioCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+    o.frequency.value = f; g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
     o.connect(g); g.connect(audioCtx.destination);
     o.start(); o.stop(audioCtx.currentTime + 0.3);
 }
 
 function nextRound() {
     if (deck.length === 0) {
-        deck = DATA[currentLvl].split(',').map(s => {
+        deck = VOCAB_DATA[currentLvl].split(',').map(s => {
             let [w, p] = s.split('|'); return {w, p};
         }).sort(() => Math.random() - 0.5);
     }
     target = deck.pop();
-    targetPinyin.innerText = target.p;
+    document.getElementById('target-pinyin').innerText = target.p;
     speak(target.w);
-
-    let levelFullSet = DATA[currentLvl].split(',').map(s => s.split('|')[0]);
-    let distractors = levelFullSet.filter(c => c !== target.w).sort(() => Math.random() - 0.5).slice(0, 10);
-    floatingWords = [target.w, ...distractors].sort(() => Math.random() - 0.5).map(c => new Word(c));
+    let all = VOCAB_DATA[currentLvl].split(',').map(s => s.split('|')[0]);
+    let dist = all.filter(c => c !== target.w).sort(() => Math.random() - 0.5).slice(0, 10);
+    floatingWords = [target.w, ...dist].sort(() => Math.random() - 0.5).map(c => new Word(c));
 }
 
-async function initGame(lvl) {
+async function start(lvl) {
     currentLvl = lvl;
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    audioCtx = new AudioContext();
     document.getElementById('menu').classList.add('hidden');
     document.getElementById('hud').classList.remove('hidden');
     gameActive = true;
@@ -180,42 +170,39 @@ function onResults(res) {
     ctx.restore();
 
     if (res.multiHandLandmarks?.[0]) {
-        let landmarks = res.multiHandLandmarks[0];
-        // Index Tip (8) and Thumb Tip (4)
-        const indexTip = landmarks[8];
-        const thumbTip = landmarks[4];
-        
-        pointer.x = (1 - indexTip.x) * canvas.width;
-        pointer.y = indexTip.y * canvas.height;
+        let l = res.multiHandLandmarks[0];
+        // Calculate Palm Center
+        hand.x = (1 - l[9].x) * canvas.width;
+        hand.y = l[9].y * canvas.height;
 
-        // Detection: Grabbing if thumb and index are close
-        const dist = Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y);
-        pointer.isGrabbing = dist < 0.06;
+        // Grip Logic: Distances of fingertips (4, 8, 12, 16, 20) to palm (0)
+        let fingerSum = 0;
+        [4, 8, 12, 16, 20].forEach(idx => {
+            fingerSum += Math.hypot(l[idx].x - l[0].x, l[idx].y - l[0].y);
+        });
+        // If average distance is small, hand is closed (grip)
+        hand.isGrabbing = (fingerSum / 5) < 0.18;
 
-        // Draw Pointer
-        ctx.font = '50px serif';
-        ctx.fillText(pointer.isGrabbing ? "✊" : "🖐️", pointer.x - 25, pointer.y + 20);
+        ctx.font = '60px serif';
+        ctx.fillText(hand.isGrabbing ? "✊" : "🖐️", hand.x - 30, hand.y + 30);
     }
 
     if (gameActive) {
         floatingWords.forEach(w => {
             w.update(); w.draw();
-            // Collision + Grabbing Logic
-            if (pointer.isGrabbing && Math.hypot(pointer.x - (w.x + 30), pointer.y - (w.y - 20)) < 70) {
-                if (w.char === target.w) { 
-                    score += 10; playSfx(880); nextRound(); 
-                } else { 
-                    score = Math.max(0, score - 5); playSfx(150); w.reset(); 
-                }
-                scoreBox.innerText = `Score: ${score}`;
-                pointer.isGrabbing = false; // Debounce grab
+            if (hand.isGrabbing && Math.hypot(hand.x - (w.x + 30), hand.y - (w.y - 20)) < 80) {
+                if (w.char === target.w) { score += 10; playSfx(800); nextRound(); }
+                else { score = Math.max(0, score - 5); playSfx(150); w.reset(); }
+                document.getElementById('score-box').innerText = `Score: ${score}`;
+                hand.isGrabbing = false;
             }
         });
     }
 }
 
 const hands = new Hands({locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`});
-hands.setOptions({maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5});
+// Lite Model Complexity for speed
+hands.setOptions({maxNumHands: 1, modelComplexity: 0, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5});
 hands.onResults(onResults);
 
 const camera = new Camera(video, {
@@ -223,8 +210,10 @@ const camera = new Camera(video, {
     width: 1280, height: 720
 });
 
-// Update UI Loading message
-hands.initialize().then(() => document.getElementById('status').innerText = "AI Tracking Ready!");
+hands.initialize().then(() => {
+    document.getElementById('loading-screen').classList.add('hidden');
+    document.getElementById('menu').classList.remove('hidden');
+});
 
 window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
 </script>

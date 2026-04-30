@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Eater Pro - Pinyin Challenge</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+
+    <style>
+        body {
+            margin: 0; padding: 0; overflow: hidden;
+            background: #000; 
+            font-family: 'Arial Rounded MT Bold', sans-serif;
+            color: white;
+        }
+
+        #ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; display: flex; flex-direction: column; align-items: center;
+            z-index: 10;
+        }
+
+        #target-pinyin {
+            font-size: 70px; color: #00f2fe; margin-top: 20px;
+            text-shadow: 0 0 20px #00f2fe, 4px 4px 0 #000;
+            background: rgba(0,0,0,0.6); padding: 5px 40px; border-radius: 20px;
+            letter-spacing: 2px;
+        }
+
+        #score-board {
+            font-size: 25px; background: rgba(0,0,0,0.7);
+            padding: 8px 25px; border-radius: 50px; margin-top: 10px;
+            border: 2px solid #ff00cc;
+        }
+
+        #overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
+            display: flex; flex-direction: column; justify-content: center;
+            align-items: center; z-index: 100; text-align: center;
+        }
+
+        .btn {
+            padding: 20px 60px; font-size: 30px; cursor: pointer;
+            background: linear-gradient(45deg, #ff00cc, #3333ff);
+            border: none; border-radius: 50px; color: white;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3); transition: 0.2s;
+            pointer-events: all;
+        }
+
+        video { display: none; }
+        canvas { display: block; width: 100vw; height: 100vh; }
+    </style>
+</head>
+<body>
+
+<div id="ui-layer">
+    <div id="target-pinyin">准备...</div>
+    <div id="score-board">Score: 0</div>
+</div>
+
+<div id="overlay">
+    <h1 style="font-size: 50px; margin-bottom: 10px;">WORD EATER: PINYIN PRO 👄</h1>
+    <p style="font-size: 20px; color: #00f2fe; max-width: 600px; margin-bottom: 30px;">
+        Look at the <b>Pinyin</b> at the top.<br>
+        Find the matching <b>Chinese Character</b> and eat it!<br>
+        (50+ Singapore P5 Phrases)
+    </p>
+    <button id="start-btn" class="btn">START GAME</button>
+</div>
+
+<video id="input_video"></video>
+<canvas id="output_canvas"></canvas>
+
+<script>
+    const videoElement = document.getElementById('input_video');
+    const canvasElement = document.getElementById('output_canvas');
+    const canvasCtx = canvasElement.getContext('2d');
+    const startBtn = document.getElementById('start-btn');
+    const pinyinEl = document.getElementById('target-pinyin');
+    const scoreEl = document.getElementById('score-board');
+
+    // Expanded P5 Vocabulary (52 phrases)
+    const vocab = [
+        {w:'坚持', p:'jiān chí'}, {w:'鼓励', p:'gǔ lì'}, {w:'克服', p:'kè fú'}, {w:'羞愧', p:'xiū kuì'},
+        {w:'勇敢', p:'yǒng gǎn'}, {w:'勤奋', p:'qín fèn'}, {w:'压力', p:'yā lì'}, {w:'目标', p:'mù biāo'},
+        {w:'配合', p:'pèi hé'}, {w:'竞赛', p:'jìng sài'}, {w:'探险', p:'tàn xiǎn'}, {w:'简单', p:'jiǎn dān'},
+        {w:'防止', p:'fáng zhǐ'}, {w:'珍惜', p:'zhēn xī'}, {w:'拒绝', p:'jù jué'}, {w:'建议', p:'jiàn yì'},
+        {w:'清楚', p:'qīng chu'}, {w:'记录', p:'jì lù'}, {w:'负责', p:'fù zé'}, {w:'历史', p:'lì shǐ'},
+        {w:'吸引', p:'xī yǐn'}, {w:'仔细', p:'zǐ xì'}, {w:'确定', p:'què dìng'}, {w:'允许', p:'yǔn xǔ'},
+        {w:'祝贺', p:'zhù hè'}, {w:'羡慕', p:'xiàn mù'}, {w:'宽容', p:'kuān róng'}, {w:'谦虚', p:'qiān xū'},
+        {w:'放弃', p:'fàng qì'}, {w:'解释', p:'jiě shì'}, {w:'顺利', p:'shùn lì'}, {w:'难道', p:'nán dào'},
+        {w:'其实', p:'qí shí'}, {w:'恐怕', p:'kǒng pà'}, {w:'稍微', p:'shāo wēi'}, {w:'智慧', p:'zhì huì'},
+        {w:'积极', p:'jī jí'}, {w:'锻炼', p:'duàn liàn'}, {w:'严格', p:'yán gé'}, {w:'毕竟', p:'bì jìng'},
+        {w:'核心', p:'hé xīn'}, {w:'暂时', p:'zàn shí'}, {w:'毕竟', p:'bì jìng'}, {w:'由于', p:'yóu yú'},
+        {w:'竟然', p:'jìng rán'}, {w:'通过', p:'tōng guò'}, {w:'果然', p:'guǒ rán'}, {w:'尤其', p:'yóu qí'},
+        {w:'甚至', p:'shèn zhì'}, {w:'尽管', p:'jǐn guǎn'}, {w:'不论', p:'bù lùn'}, {w:'凡是', p:'fán shì'}
+    ];
+
+    let score = 0;
+    let targetObj = null;
+    let gameActive = false;
+    let audioCtx = null;
+    let mouthPos = { x: 0, y: 0, open: false };
+    let shuffleDeck = [];
+    let floatingWords = [];
+    const MAX_ON_SCREEN = 12;
+
+    class FloatingWord {
+        constructor(text) {
+            this.text = text;
+            this.init();
+        }
+        init() {
+            this.x = Math.random() * (window.innerWidth - 100) + 50;
+            this.y = Math.random() * (window.innerHeight - 200) + 150;
+            const speedScale = 5; // Faster
+            this.vx = (Math.random() - 0.5) * speedScale;
+            this.vy = (Math.random() - 0.5) * speedScale;
+        }
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            if (this.x < 50 || this.x > window.innerWidth - 100) this.vx *= -1;
+            if (this.y < 150 || this.y > window.innerHeight - 50) this.vy *= -1;
+        }
+        draw() {
+            canvasCtx.font = `bold 42px "Microsoft YaHei"`;
+            canvasCtx.shadowColor = "black";
+            canvasCtx.shadowBlur = 8;
+            canvasCtx.fillStyle = "white"; // ALL words are white now
+            canvasCtx.fillText(this.text, this.x, this.y);
+            canvasCtx.shadowBlur = 0;
+        }
+    }
+
+    function speakWord(text) {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = 'zh-CN';
+        window.speechSynthesis.speak(utter);
+    }
+
+    function pickNewTarget() {
+        if (shuffleDeck.length === 0) {
+            shuffleDeck = [...vocab].sort(() => Math.random() - 0.5);
+        }
+        targetObj = shuffleDeck.pop();
+        pinyinEl.innerText = targetObj.p;
+        speakWord(targetObj.w);
+
+        // Update the screen words: 1 target + random distractors
+        const others = vocab.filter(v => v.w !== targetObj.w)
+                            .sort(() => Math.random() - 0.5)
+                            .slice(0, MAX_ON_SCREEN - 1);
+        
+        const currentBatch = [targetObj, ...others].sort(() => Math.random() - 0.5);
+        floatingWords = currentBatch.map(item => new FloatingWord(item.w));
+    }
+
+    function playSound(freq, type = 'sine') {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+    }
+
+    function onResults(results) {
+        if (canvasElement.width !== window.innerWidth) {
+            canvasElement.width = window.innerWidth;
+            canvasElement.height = window.innerHeight;
+        }
+
+        canvasCtx.save();
+        // Mirror video background
+        canvasCtx.scale(-1, 1);
+        canvasCtx.translate(-canvasElement.width, 0);
+        canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+        canvasCtx.restore();
+
+        if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+            const landmarks = results.multiFaceLandmarks[0];
+            const topLip = landmarks[13];
+            const bottomLip = landmarks[14];
+            
+            mouthPos.x = (1 - topLip.x) * canvasElement.width;
+            mouthPos.y = topLip.y * canvasElement.height;
+            mouthPos.open = Math.abs(topLip.y - bottomLip.y) > 0.05;
+
+            // Draw mouth cursor
+            canvasCtx.beginPath();
+            canvasCtx.arc(mouthPos.x, mouthPos.y, 35, 0, Math.PI * 2);
+            canvasCtx.strokeStyle = mouthPos.open ? "#ff00cc" : "#00f2fe";
+            canvasCtx.lineWidth = 4;
+            canvasCtx.stroke();
+        }
+
+        if (gameActive) {
+            floatingWords.forEach(word => {
+                word.update();
+                word.draw();
+
+                const dx = mouthPos.x - (word.x + 40);
+                const dy = mouthPos.y - (word.y - 15);
+                const dist = Math.sqrt(dx*dx + dy*dy);
+
+                if (dist < 75 && mouthPos.open) {
+                    if (word.text === targetObj.w) {
+                        score += 10;
+                        playSound(800);
+                        pickNewTarget();
+                    } else {
+                        score = Math.max(0, score - 5);
+                        playSound(150, 'sawtooth');
+                        word.init(); // Scramble wrong word
+                    }
+                    scoreEl.innerText = `Score: ${score}`;
+                    mouthPos.open = false; 
+                }
+            });
+        }
+    }
+
+    const faceMesh = new FaceMesh({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+    });
+    faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: true, minDetectionConfidence: 0.5 });
+    faceMesh.onResults(onResults);
+
+    const camera = new Camera(videoElement, {
+        onFrame: async () => { await faceMesh.send({image: videoElement}); },
+        width: 1280, height: 720
+    });
+
+    startBtn.addEventListener('click', async () => {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        await camera.start();
+        document.getElementById('overlay').style.display = 'none';
+        gameActive = true;
+        pickNewTarget();
+    });
+
+    window.addEventListener('resize', () => {
+        canvasElement.width = window.innerWidth;
+        canvasElement.height = window.innerHeight;
+    });
+</script>
+</body>
+</html>

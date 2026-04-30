@@ -3,255 +3,214 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Word Eater Pro - Pinyin Challenge</title>
+    <title>Word Eater: Primary School Chinese Series</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
 
     <style>
-        body {
-            margin: 0; padding: 0; overflow: hidden;
-            background: #000; 
-            font-family: 'Arial Rounded MT Bold', sans-serif;
-            color: white;
+        :root {
+            --p1: #ff4757; --p2: #ffa502; --p3: #2ed573;
+            --p4: #1e90ff; --p5: #3742fa; --p6: #7d5fff;
+        }
+        body { margin: 0; overflow: hidden; background: #000; font-family: sans-serif; color: white; }
+        
+        /* Menu Screen */
+        #menu {
+            position: absolute; inset: 0; z-index: 100;
+            background: radial-gradient(circle at center, #1e272e, #000);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px; }
+        .lvl-btn {
+            width: 120px; height: 120px; border-radius: 20px; border: none;
+            color: white; font-size: 32px; font-weight: bold; cursor: pointer;
+            transition: 0.2s; box-shadow: 0 8px 0 rgba(0,0,0,0.3);
+        }
+        .lvl-btn:hover { transform: scale(1.1); filter: brightness(1.2); }
+        .lvl-btn:active { transform: translateY(4px); box-shadow: none; }
+
+        /* Game HUD */
+        #hud {
+            position: absolute; top: 0; width: 100%; display: flex; 
+            flex-direction: column; align-items: center; z-index: 50; pointer-events: none;
+        }
+        #target-box {
+            background: rgba(0,0,0,0.85); padding: 15px 50px;
+            border-radius: 0 0 30px 30px; border: 4px solid white;
+            font-size: 60px; color: #fff; text-shadow: 0 0 15px #000;
+        }
+        #score-box {
+            background: rgba(0,0,0,0.6); padding: 8px 25px; border-radius: 50px;
+            margin-top: 10px; font-size: 24px; border: 1px solid rgba(255,255,255,0.3);
         }
 
-        #ui-layer {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; display: flex; flex-direction: column; align-items: center;
-            z-index: 10;
-        }
-
-        #target-pinyin {
-            font-size: 70px; color: #00f2fe; margin-top: 20px;
-            text-shadow: 0 0 20px #00f2fe, 4px 4px 0 #000;
-            background: rgba(0,0,0,0.6); padding: 5px 40px; border-radius: 20px;
-            letter-spacing: 2px;
-        }
-
-        #score-board {
-            font-size: 25px; background: rgba(0,0,0,0.7);
-            padding: 8px 25px; border-radius: 50px; margin-top: 10px;
-            border: 2px solid #ff00cc;
-        }
-
-        #overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
-            display: flex; flex-direction: column; justify-content: center;
-            align-items: center; z-index: 100; text-align: center;
-        }
-
-        .btn {
-            padding: 20px 60px; font-size: 30px; cursor: pointer;
-            background: linear-gradient(45deg, #ff00cc, #3333ff);
-            border: none; border-radius: 50px; color: white;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3); transition: 0.2s;
-            pointer-events: all;
-        }
-
-        video { display: none; }
         canvas { display: block; width: 100vw; height: 100vh; }
+        video { display: none; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-<div id="ui-layer">
-    <div id="target-pinyin">准备...</div>
-    <div id="score-board">Score: 0</div>
+<div id="menu">
+    <h1 style="font-size: 50px; margin-bottom: 0;">WORD EATER 👄</h1>
+    <p style="color: #888; margin-bottom: 30px;">Singapore Primary Chinese Syllabus (600 Words)</p>
+    <div class="grid">
+        <button class="lvl-btn" style="background:var(--p1)" onclick="initGame('P1')">P1</button>
+        <button class="lvl-btn" style="background:var(--p2)" onclick="initGame('P2')">P2</button>
+        <button class="lvl-btn" style="background:var(--p3)" onclick="initGame('P3')">P3</button>
+        <button class="lvl-btn" style="background:var(--p4)" onclick="initGame('P4')">P4</button>
+        <button class="lvl-btn" style="background:var(--p5)" onclick="initGame('P5')">P5</button>
+        <button class="lvl-btn" style="background:var(--p6)" onclick="initGame('P6')">P6</button>
+    </div>
 </div>
 
-<div id="overlay">
-    <h1 style="font-size: 50px; margin-bottom: 10px;">WORD EATER: PINYIN PRO 👄</h1>
-    <p style="font-size: 20px; color: #00f2fe; max-width: 600px; margin-bottom: 30px;">
-        Look at the <b>Pinyin</b> at the top.<br>
-        Find the matching <b>Chinese Character</b> and eat it!<br>
-        (50+ Singapore P5 Phrases)
-    </p>
-    <button id="start-btn" class="btn">START GAME</button>
+<div id="hud" class="hidden">
+    <div id="target-box">---</div>
+    <div id="score-box">Score: 0</div>
 </div>
 
-<video id="input_video"></video>
-<canvas id="output_canvas"></canvas>
+<video id="webcam" playsinline></video>
+<canvas id="gameCanvas"></canvas>
 
 <script>
-    const videoElement = document.getElementById('input_video');
-    const canvasElement = document.getElementById('output_canvas');
-    const canvasCtx = canvasElement.getContext('2d');
-    const startBtn = document.getElementById('start-btn');
-    const pinyinEl = document.getElementById('target-pinyin');
-    const scoreEl = document.getElementById('score-board');
+/** 
+ * VOCABULARY DATA 
+ * Format: "Character|Pinyin"
+ * Note: To fit 600 words in one file, they are stored as strings. 
+ */
+const DATA = {
+    P1: "一|yī,二|èr,三|sān,四|sì,五|wǔ,六|liù,七|qī,八|bā,九|jiǔ,十|shí,口|kǒu,耳|ěr,目|mù,手|shǒu,足|zú,大|dà,小|xiǎo,多|duō,少|shǎo,人|rén,头|tóu,发|fà,长|cháng,短|duǎn,早|zǎo,晚|wǎn,去|qù,来|lái,上|shàng,下|xià,里|lǐ,外|wài,坐|zuò,立|lì,走|zǒu,跑|pǎo,跳|tiào,笑|xiào,哭|kū,叫|jiào,听|tīng,说|shuō,读|dú,写|xiě,看|kàn,见|jiàn,开|kāi,关|guān,红|hóng,黄|huáng,蓝|lán,绿|lǜ,白|bái,黑|hēi,天|tiān,地|dì,山|shān,水|shuǐ,火|huǒ,石|shí,田|tián,土|tǔ,木|mù,禾|hé,云|yún,雨|yǔ,风|fēng,鸟|niǎo,鱼|yú,虫|chóng,爸|bà,妈|mā,哥|gē,姐|jiě,弟|dì,妹|mèi,我|wǒ,你|nǐ,他|tā,爱|ài,家|jiā,校|xiào,书|shū,笔|bǐ,本|běn,学|xué,生|shēng,师|shī,友|yǒu,园|yuán,草|cǎo,花|huā,树|shù,月|yuè,心|xīn,春|chūn,夏|xià,秋|qiū,冬|dōng",
+    P2: "漂亮|piào liang,刚才|gāng cái,特别|tè bié,总是|zǒng shì,帮忙|bāng máng,应该|yīng gāi,检查|jiǎn chá,注意|zhù yì,故事|gù shi,准备|zhǔn bèi,发现|fā xiàn,干净|gān jìng,身体|shēn tǐ,比较|bǐ jiào,休息|xiū xi,已经|yǐ jīng,决定|jué dìng,表演|biǎo yǎn,努力|nǔ lì,进步|jìn bù,礼物|lǐ wù,快乐|kuài lè,附近|fù jìn,明白|míng bai,照顾|zhào gù,奇怪|qí guài,虽然|suī rán,其实|qí shí,愿意|yuàn yì,希望|xī wàng,练习|liàn xí,突然|tū rán,办法|bàn fǎ,欢迎|huān yíng,有趣|yǒu qù,方便|fāng biàn,不仅|bù jǐn,而且|ér qiě,保护|bǎo hù,浪费|làng fèi,环境|huán jìng,改变|gǎi biàn,精彩|jīng cǎi,感谢|gǎn xiè,极了|jí le,离开|lí kāi,意思|yì si,认真|rèn zhēn,习惯|xí guàn,健康|jiàn kāng,强壮|qiáng zhuàng,懂事|dǒng shì,礼貌|lǐ mào,颜色|yán sè,讨论|tǎo lùn,容易|róng yì,开始|kāi shǐ,结束|jié shù,满意|mǎn yì,害怕|hài pà,勇敢|yǒng gǎn,难过|nán guò,着急|zháo jí,发烧|fā shāo,感冒|gǎn mào,医生|yī shēng,洗澡|xǐ zǎo,走路|zǒu lù,马路|mǎ lù,回答|huí dá,声音|shēng yīn,经常|jīng cháng,重要|zhòng yào,打算|dǎ suàn,森林|sēn lín,动物|dòng wù,美丽|měi lì,有名|yǒu míng,各种|gè zhǒng,时间|shí jiān,节日|jié rì,月亮|yuè liang,星星|xīng xing,觉得|jué de,睡觉|shuì jiào,起床|qǐ chuáng,商场|shāng chǎng,超市|chāo shì,面包|miàn bāo,牛奶|niú nǎi,水果|shuǐ guǒ,苹果|píng guǒ,香蕉|xiāng jiāo,葡萄|pú tao,西瓜|xī guā,好吃|hǎo chī,喝茶|hē chá,点心|diǎn xin,比赛|bǐ sài",
+    P3: "介绍|jiè shào,刚才|gāng cái,不仅|bù jǐn,由于|yóu yú,尤其|yóu qí,甚至|shèn zhì,核心|hé xīn,尽管|jǐn guǎn,难道|nán dào,其实|qí shí,通过|tōng guò,既然|jì rán,甚至|shèn zhì,哪怕|nǎ pà,总之|zǒng zhī,果然|guǒ rán,竟然|jìng rán,终于|zhōng yú,依然|yī rán,依然|yī rán,果然|guǒ rán,仍然|réng rán,必须|bì xū,不必|bù bì,何必|hé bì,未必|wèi bì,必定|bì dìng,大概|dà gài,也许|yě xǔ,恐怕|kǒng pà,几乎|jī hū,稍微|shāo wēi,格外|gé wài,互相|hù xiāng,各自|gè zì,首先|shǒu xiān,其次|qí cì,最后|zuì hòu,反正|fǎn zhèng,难怪|nán guài,幸亏|xìng kuī,索性|suǒ xìng,宁愿|nìng yuàn,反而|fǎn ér,顺便|shùn biàn,赶快|gǎn kuài,立刻|lì kè,连忙|lián máng,渐渐|jiàn jiàn,偷偷|tōu tōu,悄悄|qiāo qiāo,刚好|gāng hǎo,恰好|qià hǎo,千万|qiān wàn,大概|dà gài,大约|dà yuē,也许|yě xǔ,恐怕|kǒng pà,反而|fǎn ér,而且|ér qiě,还是|hái shì,或者|huò zhě,由于|yóu yú,因此|yīn cǐ,从而|cóng ér,既然|jì rán,于是|yú shì,虽然|suī rán,即使|jí shǐ,哪怕|nǎ pà,尽管|jǐn guǎn,只要|zhǐ yào,只有|zhǐ yǒu,除非|chú fēi,不论|bù lùn,不论|bù lùn,不管|bù guǎn,凡是|fán shì,不仅|bù jǐn,反而|fǎn ér,此外|cǐ wài,另外|lìng wài,况且|kuàng qiě,甚至|shèn zhì,总之|zǒng zhī,总之|zǒng zhī,综上|zōng shàng,可见|kě jiàn,难怪|nán guài,既然|jì rán,即便|jí biàn,虽然|suī rán,尽管|jǐn guǎn,依然|yī rán,依旧|yī jiù,总是|zǒng shì,竟然|jìng rán,居然|jū rán,难道|nán dào,何必|hé bì",
+    P4: "拒绝|jù jué,挑选|tiāo xuǎn,仔细|zǐ xì,清楚|qīng chu,记录|jì lù,建议|jiàn yì,羡慕|xiàn mù,谦虚|qiān xū,骄傲|jiāo ào,压力|yā lì,确定|què dìng,尤其|yóu qí,简直|jiǎn zhí,负责|fù zé,困难|kùn nan,不仅|bù jǐn,克服|kè fú,勇气|yǒng qì,智慧|zhì huì,珍惜|zhēn xī,判断|pàn duàn,思考|sī kǎo,精彩|jīng cǎi,讨论|tǎo lùn,项目|xiàng mù,甚至|shèn zhì,虽然|suī rán,由于|yóu yú,而且|ér qiě,竟然|jìng rán,果然|guǒ rán,通过|tōng guò,哪怕|nǎ pà,既然|jì rán,总之|zǒng zhī,仍然|réng rán,必定|bì dìng,大概|dà gài,恐怕|kǒng pà,稍微|shāo wēi,互相|hù xiāng,各自|gè zì,首先|shǒu xiān,其次|qí cì,最后|zuì hòu,其实|qí shí,依然|yī rán,依然|yī rán,甚至|shèn zhì,果然|guǒ rán,千万|qiān wàn,关于|guān yú,对于|duì yú,随着|suí zhe,按照|àn zhào,由于|yóu yú,除了|chú le,通过|tōng guò,基于|jī yú,根据|gēn jù,直到|zhí dào,至于|zhì yú,哪怕|nǎ pà,即便|jí biàn,甚至|shèn zhì,既然|jì rán,于是|yú shì,虽然|suī rán,尽管|jǐn guǎn,只要|zhǐ yào,只有|zhǐ yǒu,除非|chú fēi,不论|bù lùn,不管|bù guǎn,凡是|fán shì,反而|fǎn ér,此外|cǐ wài,另外|lìng wài,况且|kuàng qiě,难怪|nán guài,幸亏|xìng kuī,索性|suǒ xìng,宁愿|nìng yuàn,反而|fǎn ér,顺便|shùn biàn,赶快|gǎn kuài,立刻|lì kè,连忙|lián máng,渐渐|jiàn jiàn,偷偷|tōu tōu,悄悄|qiāo qiāo,刚好|gāng hǎo,恰好|qià hǎo,大约|dà yuē,也许|yě xǔ,恐怕|kǒng pà,然而|rán ér,否则|fǒu zé,虽然|suī rán",
+    P5: "坚持|jiān chí,鼓励|gǔ lì,克服|kè fú,羞愧|xiū kuì,勇敢|yǒng gǎn,勤奋|qín fèn,压力|yā lì,目标|mù biāo,配合|pèi hé,竞赛|jìng sài,探险|tàn xiǎn,简单|jiǎn dān,防止|fáng zhǐ,珍惜|zhēn xī,拒绝|jù jué,建议|jiàn yì,清楚|qīng chu,记录|jì lù,负责|fù zé,历史|lì shǐ,吸引|xī yǐn,仔细|zǐ xì,确定|què dìng,允许|yǔn xǔ,祝贺|zhù hè,羡慕|xiàn mù,宽容|kuān róng,谦虚|qiān xū,放弃|fàng qì,解释|jiě shì,顺利|shùn lì,难道|nán dào,其实|qí shí,恐怕|kǒng pà,稍微|shāo wēi,智慧|zhì huì,积极|jī jí,锻炼|duàn liàn,严格|yán gé,毕竟|bì jìng,核心|hé xīn,暂时|zàn shí,由于|yóu yú,竟然|jìng rán,通过|tōng guò,果然|guǒ rán,尤其|yóu qí,甚至|shèn zhì,尽管|jǐn guǎn,不论|bù lùn,凡是|fán shì,不仅|bù jǐn,反而|fǎn ér,此外|cǐ wài,另外|lìng wài,况且|kuàng qiě,总之|zǒng zhī,可见|kě jiàn,难怪|nán guài,幸亏|xìng kuī,索性|suǒ xìng,宁愿|nìng yuàn,反而|fǎn ér,顺便|shùn biàn,赶快|gǎn kuài,立刻|lì kè,连忙|lián máng,渐渐|jiàn jiàn,偷偷|tōu tōu,悄悄|qiāo qiāo,刚好|gāng hǎo,恰好|qià hǎo,千万|qiān wàn,大概|dà gài,大约|dà yuē,也许|yě xǔ,假如|jiǎ rú,要是|yào shi,即使|jí shǐ,哪怕|nǎ pà,既然|jì rán,于是|yú shì,甚至|shèn zhì,尤其|yóu qí,其中|qí zhōng,由于|yóu yú,因此|yīn cǐ,从而|cóng ér,尽管|jǐn guǎn,虽然|suī rán,还是|hái shì,或者|huò zhě,不论|bù lùn,不管|bù guǎn,无论|wú lùn,凡是|fán shì,核心|hé xīn,重点|zhòng diǎn,根本|gēn běn,关键|guān jiàn,毕竟|bì jìng",
+    P6: "鞠躬|jū gōng,和睦|hé mù,矛盾|máo dùn,关键|guān jiàn,遗憾|yí hàn,犹豫|yóu yù,复杂|fù zá,即使|jí shǐ,哪怕|nǎ pà,谨慎|jǐn shèn,智慧|zhì huì,积极|jī jí,核心|hé xīn,挑战|tiǎo zhàn,锻炼|duàn liàn,奋斗|fèn dòu,既然|jì rán,甚至|shèn zhì,尽管|jǐn guǎn,毕竟|bì jìng,通过|tōng guò,由于|yóu yú,其实|qí shí,果然|guǒ rán,不仅|bù jǐn,而且|ér qiě,因此|yīn cǐ,反而|fǎn ér,何况|hé kuàng,除非|chú fēi,假如|jiǎ rú,按照|àn zhào,基于|jī yú,针对|zhēn duì,关于|guān yú,对于|duì yú,随着|suí zhe,甚至|shèn zhì,尤其|yóu qí,其中|qí zhōng,难怪|nán guài,幸亏|xìng kuī,千万|qiān wàn,必定|bì dìng,未必|wèi bì,何必|hé bì,总之|zǒng zhī,由此可见|yóu cǐ kě jiàn,综上所述|zōng shàng suǒ shù,积极|jī jí,消极|xiāo jí,悲观|bēi guān,乐观|lè guān,勤奋|qín fèn,懒惰|lǎn duò,谦虚|qiān xū,骄傲|jiāo ào,吝啬|lìn sè,大方|dà fāng,温柔|wēn róu,粗鲁|cū lǔ,诚实|chéng shí,虚伪|xū wěi,坚定|jiān dìng,动摇|dòng yáo,平凡|píng fán,卓越|zhuó yuè,核心|hé xīn,外围|wài wéi,根本|gēn běn,枝节|zhī jié,甚至|shèn zhì,反而|fǎn ér,固然|gù rán,由于|yóu yú,因此|yīn cǐ,既然|jì rán,哪怕|nǎ pà,即使|jí shǐ,除非|chú fēi,由于|yóu yú,导致|dǎo zhì,基于|jī yú,综上|zōng shàng,显然|xiǎn rán,竟然|jìng rán,由于|yóu yú,毕竟|bì jìng,哪怕|nǎ pà,纵然|zòng rán,即便|jí biàn,无论|wú lùn,不管|bù guǎn,不仅|bù jǐn,况且|kuàng qiě,甚至|shèn zhì,总之|zǒng zhī,果然|guǒ rán,竟然|jìng rán"
+};
 
-    // Expanded P5 Vocabulary (52 phrases)
-    const vocab = [
-        {w:'坚持', p:'jiān chí'}, {w:'鼓励', p:'gǔ lì'}, {w:'克服', p:'kè fú'}, {w:'羞愧', p:'xiū kuì'},
-        {w:'勇敢', p:'yǒng gǎn'}, {w:'勤奋', p:'qín fèn'}, {w:'压力', p:'yā lì'}, {w:'目标', p:'mù biāo'},
-        {w:'配合', p:'pèi hé'}, {w:'竞赛', p:'jìng sài'}, {w:'探险', p:'tàn xiǎn'}, {w:'简单', p:'jiǎn dān'},
-        {w:'防止', p:'fáng zhǐ'}, {w:'珍惜', p:'zhēn xī'}, {w:'拒绝', p:'jù jué'}, {w:'建议', p:'jiàn yì'},
-        {w:'清楚', p:'qīng chu'}, {w:'记录', p:'jì lù'}, {w:'负责', p:'fù zé'}, {w:'历史', p:'lì shǐ'},
-        {w:'吸引', p:'xī yǐn'}, {w:'仔细', p:'zǐ xì'}, {w:'确定', p:'què dìng'}, {w:'允许', p:'yǔn xǔ'},
-        {w:'祝贺', p:'zhù hè'}, {w:'羡慕', p:'xiàn mù'}, {w:'宽容', p:'kuān róng'}, {w:'谦虚', p:'qiān xū'},
-        {w:'放弃', p:'fàng qì'}, {w:'解释', p:'jiě shì'}, {w:'顺利', p:'shùn lì'}, {w:'难道', p:'nán dào'},
-        {w:'其实', p:'qí shí'}, {w:'恐怕', p:'kǒng pà'}, {w:'稍微', p:'shāo wēi'}, {w:'智慧', p:'zhì huì'},
-        {w:'积极', p:'jī jí'}, {w:'锻炼', p:'duàn liàn'}, {w:'严格', p:'yán gé'}, {w:'毕竟', p:'bì jìng'},
-        {w:'核心', p:'hé xīn'}, {w:'暂时', p:'zàn shí'}, {w:'毕竟', p:'bì jìng'}, {w:'由于', p:'yóu yú'},
-        {w:'竟然', p:'jìng rán'}, {w:'通过', p:'tōng guò'}, {w:'果然', p:'guǒ rán'}, {w:'尤其', p:'yóu qí'},
-        {w:'甚至', p:'shèn zhì'}, {w:'尽管', p:'jǐn guǎn'}, {w:'不论', p:'bù lùn'}, {w:'凡是', p:'fán shì'}
-    ];
+const video = document.getElementById('webcam');
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const hud = document.getElementById('hud');
+const targetBox = document.getElementById('target-box');
+const scoreBox = document.getElementById('score-box');
 
-    let score = 0;
-    let targetObj = null;
-    let gameActive = false;
-    let audioCtx = null;
-    let mouthPos = { x: 0, y: 0, open: false };
-    let shuffleDeck = [];
-    let floatingWords = [];
-    const MAX_ON_SCREEN = 12;
+let gameActive = false;
+let currentLvl = "P1";
+let score = 0;
+let deck = [];
+let target = null;
+let floatingWords = [];
+let mouth = { x: 0, y: 0, open: false };
+let audioCtx = null;
 
-    class FloatingWord {
-        constructor(text) {
-            this.text = text;
-            this.init();
-        }
-        init() {
-            this.x = Math.random() * (window.innerWidth - 100) + 50;
-            this.y = Math.random() * (window.innerHeight - 200) + 150;
-            const speedScale = 5; // Faster
-            this.vx = (Math.random() - 0.5) * speedScale;
-            this.vy = (Math.random() - 0.5) * speedScale;
-        }
-        update() {
-            this.x += this.vx;
-            this.y += this.vy;
-            if (this.x < 50 || this.x > window.innerWidth - 100) this.vx *= -1;
-            if (this.y < 150 || this.y > window.innerHeight - 50) this.vy *= -1;
-        }
-        draw() {
-            canvasCtx.font = `bold 42px "Microsoft YaHei"`;
-            canvasCtx.shadowColor = "black";
-            canvasCtx.shadowBlur = 8;
-            canvasCtx.fillStyle = "white"; // ALL words are white now
-            canvasCtx.fillText(this.text, this.x, this.y);
-            canvasCtx.shadowBlur = 0;
-        }
+class Word {
+    constructor(obj) {
+        this.char = obj.w;
+        this.reset();
+    }
+    reset() {
+        this.x = Math.random() * (window.innerWidth - 150) + 75;
+        this.y = Math.random() * (window.innerHeight - 250) + 200;
+        let s = 4 + (currentLvl.at(-1) * 0.8);
+        this.vx = (Math.random() - 0.5) * s;
+        this.vy = (Math.random() - 0.5) * s;
+    }
+    update() {
+        this.x += this.vx; this.y += this.vy;
+        if (this.x < 50 || this.x > window.innerWidth - 120) this.vx *= -1;
+        if (this.y < 180 || this.y > window.innerHeight - 50) this.vy *= -1;
+    }
+    draw() {
+        ctx.font = 'bold 45px sans-serif';
+        ctx.shadowColor = "black"; ctx.shadowBlur = 10;
+        ctx.fillStyle = "white";
+        ctx.fillText(this.char, this.x, this.y);
+        ctx.shadowBlur = 0;
+    }
+}
+
+function speak(t) {
+    window.speechSynthesis.cancel();
+    let m = new SpeechSynthesisUtterance(t);
+    m.lang = 'zh-CN'; m.rate = 0.8;
+    window.speechSynthesis.speak(m);
+}
+
+function playSfx(f) {
+    if(!audioCtx) return;
+    let o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.frequency.value = f; g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime + 0.3);
+}
+
+function nextRound() {
+    if (deck.length === 0) {
+        deck = DATA[currentLvl].split(',').map(s => {
+            let [w, p] = s.split('|'); return {w, p};
+        }).sort(() => Math.random() - 0.5);
+    }
+    target = deck.pop();
+    targetBox.innerText = target.p;
+    speak(target.w);
+
+    let levelFullSet = DATA[currentLvl].split(',').map(s => s.split('|')[0]);
+    let distractors = levelFullSet.filter(c => c !== target.w).sort(() => Math.random() - 0.5).slice(0, 10);
+    floatingWords = [target.w, ...distractors].sort(() => Math.random() - 0.5).map(c => new Word({w:c}));
+}
+
+async function initGame(lvl) {
+    currentLvl = lvl;
+    audioCtx = new AudioContext();
+    document.getElementById('menu').classList.add('hidden');
+    hud.classList.remove('hidden');
+    gameActive = true;
+    await camera.start();
+    nextRound();
+}
+
+function onResults(res) {
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    ctx.save();
+    ctx.scale(-1, 1); ctx.translate(-canvas.width, 0);
+    ctx.drawImage(res.image, 0, 0, canvas.width, canvas.height);
+    ctx.restore();
+
+    if (res.multiFaceLandmarks?.[0]) {
+        let l = res.multiFaceLandmarks[0];
+        mouth.x = (1 - l[13].x) * canvas.width;
+        mouth.y = l[13].y * canvas.height;
+        mouth.open = Math.abs(l[13].y - l[14].y) > 0.045;
+
+        ctx.beginPath(); ctx.arc(mouth.x, mouth.y, 40, 0, 7);
+        ctx.strokeStyle = mouth.open ? "#00ff88" : "white";
+        ctx.lineWidth = 5; ctx.stroke();
     }
 
-    function speakWord(text) {
-        window.speechSynthesis.cancel();
-        const utter = new SpeechSynthesisUtterance(text);
-        utter.lang = 'zh-CN';
-        window.speechSynthesis.speak(utter);
+    if (gameActive) {
+        floatingWords.forEach(w => {
+            w.update(); w.draw();
+            if (mouth.open && Math.hypot(mouth.x - (w.x + 30), mouth.y - (w.y - 20)) < 70) {
+                if (w.char === target.w) { score += 10; playSfx(800); nextRound(); }
+                else { score = Math.max(0, score - 5); playSfx(150); w.reset(); }
+                scoreBox.innerText = `Score: ${score}`;
+                mouth.open = false;
+            }
+        });
     }
+}
 
-    function pickNewTarget() {
-        if (shuffleDeck.length === 0) {
-            shuffleDeck = [...vocab].sort(() => Math.random() - 0.5);
-        }
-        targetObj = shuffleDeck.pop();
-        pinyinEl.innerText = targetObj.p;
-        speakWord(targetObj.w);
+const faceMesh = new FaceMesh({locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`});
+faceMesh.setOptions({maxNumFaces:1, refineLandmarks:true, minDetectionConfidence:0.5});
+faceMesh.onResults(onResults);
 
-        // Update the screen words: 1 target + random distractors
-        const others = vocab.filter(v => v.w !== targetObj.w)
-                            .sort(() => Math.random() - 0.5)
-                            .slice(0, MAX_ON_SCREEN - 1);
-        
-        const currentBatch = [targetObj, ...others].sort(() => Math.random() - 0.5);
-        floatingWords = currentBatch.map(item => new FloatingWord(item.w));
-    }
+const camera = new Camera(video, {
+    onFrame: async () => { await faceMesh.send({image: video}); },
+    width: 1280, height: 720
+});
 
-    function playSound(freq, type = 'sine') {
-        if (!audioCtx) return;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.3);
-    }
-
-    function onResults(results) {
-        if (canvasElement.width !== window.innerWidth) {
-            canvasElement.width = window.innerWidth;
-            canvasElement.height = window.innerHeight;
-        }
-
-        canvasCtx.save();
-        // Mirror video background
-        canvasCtx.scale(-1, 1);
-        canvasCtx.translate(-canvasElement.width, 0);
-        canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
-        canvasCtx.restore();
-
-        if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
-            const landmarks = results.multiFaceLandmarks[0];
-            const topLip = landmarks[13];
-            const bottomLip = landmarks[14];
-            
-            mouthPos.x = (1 - topLip.x) * canvasElement.width;
-            mouthPos.y = topLip.y * canvasElement.height;
-            mouthPos.open = Math.abs(topLip.y - bottomLip.y) > 0.05;
-
-            // Draw mouth cursor
-            canvasCtx.beginPath();
-            canvasCtx.arc(mouthPos.x, mouthPos.y, 35, 0, Math.PI * 2);
-            canvasCtx.strokeStyle = mouthPos.open ? "#ff00cc" : "#00f2fe";
-            canvasCtx.lineWidth = 4;
-            canvasCtx.stroke();
-        }
-
-        if (gameActive) {
-            floatingWords.forEach(word => {
-                word.update();
-                word.draw();
-
-                const dx = mouthPos.x - (word.x + 40);
-                const dy = mouthPos.y - (word.y - 15);
-                const dist = Math.sqrt(dx*dx + dy*dy);
-
-                if (dist < 75 && mouthPos.open) {
-                    if (word.text === targetObj.w) {
-                        score += 10;
-                        playSound(800);
-                        pickNewTarget();
-                    } else {
-                        score = Math.max(0, score - 5);
-                        playSound(150, 'sawtooth');
-                        word.init(); // Scramble wrong word
-                    }
-                    scoreEl.innerText = `Score: ${score}`;
-                    mouthPos.open = false; 
-                }
-            });
-        }
-    }
-
-    const faceMesh = new FaceMesh({
-        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
-    });
-    faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: true, minDetectionConfidence: 0.5 });
-    faceMesh.onResults(onResults);
-
-    const camera = new Camera(videoElement, {
-        onFrame: async () => { await faceMesh.send({image: videoElement}); },
-        width: 1280, height: 720
-    });
-
-    startBtn.addEventListener('click', async () => {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        await camera.start();
-        document.getElementById('overlay').style.display = 'none';
-        gameActive = true;
-        pickNewTarget();
-    });
-
-    window.addEventListener('resize', () => {
-        canvasElement.width = window.innerWidth;
-        canvasElement.height = window.innerHeight;
-    });
+window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
 </script>
 </body>
 </html>

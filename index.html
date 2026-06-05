@@ -4,44 +4,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>华文欢乐大闯关 - Chinese Word Arcade Deluxe</title>
-    <!-- Tailwind CSS for rich, playful, and responsive user interfaces -->
+    <!-- Tailwind CSS for modern layout styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome for cartoon-style UI icons -->
+    <!-- FontAwesome for playful game icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- MediaPipe Face Mesh & Camera Utilities loaded securely via CDN -->
+    <!-- MediaPipe Face Mesh & Camera Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=ZCOOL_KuaiLe&family=Fredoka:wght@400;600;700&display=swap');
+        
+        :root {
+            --p1: #ff4757; --p2: #ffa502; --p3: #2ed573;
+            --p4: #1e90ff; --p5: #3742fa; --p6: #7d5fff;
+        }
+
         body {
             font-family: 'Fredoka', 'ZCOOL KuaiLe', sans-serif;
-            background: radial-gradient(circle, #ffeedd 0%, #ffccaa 100%);
+            background: #000;
             user-select: none;
             touch-action: manipulation;
         }
-        .comic-border {
+
+        /* Modern, solid comic styles for the dark theme setup */
+        .setup-card {
+            background: rgba(15, 23, 42, 0.95);
             border: 4px solid #4a3728;
-            box-shadow: 4px 4px 0px #4a3728;
-        }
-        .comic-shadow {
             box-shadow: 6px 6px 0px #4a3728;
         }
-        .bounce-hover:hover {
-            transform: scale(1.05) rotate(-1deg);
-        }
-        /* Elegant styled scrollbar for mastered vocabulary sidebar */
+
+        /* Custom scrollbar for mastered vocabulary history */
         ::-webkit-scrollbar {
             width: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.05);
+            background: rgba(0, 0, 0, 0.2);
             border-radius: 10px;
         }
         ::-webkit-scrollbar-thumb {
             background: #f97316;
             border-radius: 10px;
         }
-        /* Animation frame shakes for bomb explosions */
+
+        /* Shake animation for gold-rush bomb explosion hits */
         @keyframes shake {
             0% { transform: translate(1px, 1px) rotate(0deg); }
             10% { transform: translate(-1px, -2px) rotate(-1deg); }
@@ -59,23 +64,23 @@
         }
     </style>
 </head>
-<body class="w-screen h-screen overflow-hidden flex flex-col justify-between">
+<body class="w-screen h-screen overflow-hidden flex flex-col justify-between text-white">
 
     <!-- TOP NAVIGATION HEADER -->
-    <header class="w-full bg-orange-500 text-white border-b-4 border-amber-950 p-4 flex justify-between items-center z-30 shadow-md">
+    <header class="w-full bg-stone-900 border-b-4 border-amber-950 p-4 flex justify-between items-center z-30 shadow-md">
         <div class="flex items-center space-x-3">
             <span class="text-4xl">🐼</span>
             <div>
-                <h1 class="text-2xl md:text-3xl font-extrabold tracking-wide text-yellow-200" style="font-family: 'ZCOOL KuaiLe', sans-serif;">
-                    华文欢乐大闯关 <span class="text-lg text-white font-normal">Chinese Word Arcade Deluxe</span>
+                <h1 class="text-2xl md:text-3xl font-extrabold tracking-wide text-yellow-400" style="font-family: 'ZCOOL KuaiLe', sans-serif;">
+                    华文欢乐大闯关 <span class="text-lg text-white font-normal block md:inline md:ml-2">Chinese Word Arcade Deluxe</span>
                 </h1>
             </div>
         </div>
         <div class="flex items-center space-x-3">
-            <button id="toggleHistoryBtn" class="bg-amber-600 hover:bg-amber-700 px-4 py-2 rounded-full border-2 border-white font-semibold text-sm transition-all shadow">
+            <button id="toggleHistoryBtn" class="bg-amber-700 hover:bg-amber-800 px-4 py-2 rounded-full border-2 border-white font-semibold text-sm transition-all shadow-md">
                 <i class="fa-solid fa-trophy mr-1 text-yellow-300"></i> 成就榜 History
             </button>
-            <button id="muteBtn" class="bg-white text-orange-600 hover:bg-orange-100 p-3 rounded-full border-2 border-orange-600 w-12 h-12 flex items-center justify-center transition-all shadow">
+            <button id="muteBtn" class="bg-stone-800 text-orange-400 hover:bg-stone-700 p-3 rounded-full border-2 border-orange-500 w-12 h-12 flex items-center justify-center transition-all shadow">
                 <i id="muteIcon" class="fa-solid fa-volume-high text-lg"></i>
             </button>
         </div>
@@ -85,48 +90,48 @@
     <main id="mainContainer" class="relative flex-1 w-full max-w-7xl mx-auto p-4 flex flex-col items-center justify-center">
         
         <!-- SETUP CONFIGURATION BOARD -->
-        <section id="setupScreen" class="w-full max-w-4xl bg-white rounded-3xl p-6 md:p-8 comic-border comic-shadow flex flex-col items-center space-y-6 z-20 overflow-y-auto max-h-[80vh]">
-            <h2 class="text-3xl md:text-4xl text-orange-600 font-extrabold text-center">🏆 全级华文大闯关：选择你的关卡</h2>
-            <p class="text-stone-600 text-center text-sm md:text-base">Comprehensive P1 to P6 Chinese Syllabus with Cumulative Recaps (Over 700 Words!)</p>
+        <section id="setupScreen" class="w-full max-w-4xl setup-card rounded-3xl p-6 md:p-8 flex flex-col items-center space-y-6 z-20 overflow-y-auto max-h-[80vh]">
+            <h2 class="text-3xl md:text-4xl text-orange-400 font-extrabold text-center tracking-wide" style="font-family: 'ZCOOL KuaiLe', sans-serif;">🏆 全级华文大闯关：选择你的关卡</h2>
+            <p class="text-stone-400 text-center text-sm md:text-base">Comprehensive P1 to P6 Chinese Syllabus with Cumulative Recaps (Over 700 Words!)</p>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
                 <!-- Level and Stream Selection Group -->
-                <div class="space-y-4 bg-orange-50 p-4 rounded-2xl border-2 border-orange-200">
-                    <h3 class="text-lg font-bold text-orange-800"><i class="fa-solid fa-graduation-cap mr-2"></i>1. 课程与年级 Class Setup</h3>
+                <div class="space-y-4 bg-stone-900 bg-opacity-60 p-5 rounded-2xl border border-stone-800">
+                    <h3 class="text-lg font-bold text-orange-400"><i class="fa-solid fa-graduation-cap mr-2"></i>1. 课程与年级 Class Setup</h3>
                     
                     <div>
-                        <label class="block text-sm font-semibold text-stone-700 mb-1">选择年级 Primary Level:</label>
+                        <label class="block text-xs font-semibold text-stone-400 mb-2">选择年级 Primary Level:</label>
                         <div class="grid grid-cols-3 gap-2" id="levelGroup">
-                            <button class="level-btn py-2 px-3 bg-white text-stone-700 border-2 border-stone-300 rounded-xl font-bold transition-all text-sm hover:border-orange-500" data-val="P1">P1 一年级</button>
-                            <button class="level-btn py-2 px-3 bg-white text-stone-700 border-2 border-stone-300 rounded-xl font-bold transition-all text-sm hover:border-orange-500" data-val="P2">P2 二年级</button>
-                            <button class="level-btn py-2 px-3 bg-white text-stone-700 border-2 border-stone-300 rounded-xl font-bold transition-all text-sm hover:border-orange-500" data-val="P3">P3 三年级</button>
-                            <button class="level-btn py-2 px-3 bg-white text-stone-700 border-2 border-stone-300 rounded-xl font-bold transition-all text-sm hover:border-orange-500" data-val="P4">P4 四年级</button>
-                            <button class="level-btn py-2 px-3 bg-orange-500 text-white ring-4 ring-orange-300 border-orange-600 scale-105 shadow-md rounded-xl font-bold transition-all text-sm" data-val="P5">P5 五年级</button>
-                            <button class="level-btn py-2 px-3 bg-white text-stone-700 border-2 border-stone-300 rounded-xl font-bold transition-all text-sm hover:border-orange-500" data-val="P6">P6 六年级</button>
+                            <button class="level-btn py-2 px-3 bg-stone-800 text-stone-300 border-2 border-stone-700 rounded-xl font-bold transition-all text-sm hover:border-orange-500" data-val="P1">P1 一年级</button>
+                            <button class="level-btn py-2 px-3 bg-stone-800 text-stone-300 border-2 border-stone-700 rounded-xl font-bold transition-all text-sm hover:border-orange-500" data-val="P2">P2 二年级</button>
+                            <button class="level-btn py-2 px-3 bg-stone-800 text-stone-300 border-2 border-stone-700 rounded-xl font-bold transition-all text-sm hover:border-orange-500" data-val="P3">P3 三年级</button>
+                            <button class="level-btn py-2 px-3 bg-stone-800 text-stone-300 border-2 border-stone-700 rounded-xl font-bold transition-all text-sm hover:border-orange-500" data-val="P4">P4 四年级</button>
+                            <button class="level-btn py-2 px-3 bg-orange-500 text-white ring-4 ring-orange-400 border-orange-600 scale-105 shadow-md rounded-xl font-bold transition-all text-sm" data-val="P5">P5 五年级</button>
+                            <button class="level-btn py-2 px-3 bg-stone-800 text-stone-300 border-2 border-stone-700 rounded-xl font-bold transition-all text-sm hover:border-orange-500" data-val="P6">P6 六年级</button>
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-semibold text-stone-700 mb-1">选择课程 Stream:</label>
+                        <label class="block text-xs font-semibold text-stone-400 mb-2">选择课程 Stream:</label>
                         <div class="grid grid-cols-2 gap-2" id="streamGroup">
-                            <button class="stream-btn py-2 px-4 bg-orange-500 text-white ring-4 ring-orange-300 border-orange-600 scale-105 shadow-md rounded-xl font-bold transition-all text-sm" data-val="standard">普通华文 Standard</button>
-                            <button class="stream-btn py-2 px-4 bg-white text-stone-700 border-2 border-stone-300 rounded-xl font-bold transition-all text-sm hover:border-orange-500" data-val="higher">高级华文 Higher</button>
+                            <button class="stream-btn py-2 px-4 bg-orange-500 text-white ring-4 ring-orange-400 border-orange-600 scale-105 shadow-md rounded-xl font-bold transition-all text-sm" data-val="standard">普通华文 Standard</button>
+                            <button class="stream-btn py-2 px-4 bg-stone-800 text-stone-300 border-2 border-stone-700 rounded-xl font-bold transition-all text-sm hover:border-orange-500" data-val="higher">高级华文 Higher</button>
                         </div>
                     </div>
                 </div>
 
                 <!-- Input and Mode Selection Group -->
-                <div class="space-y-4 bg-amber-50 p-4 rounded-2xl border-2 border-amber-200">
-                    <h3 class="text-lg font-bold text-amber-800"><i class="fa-solid fa-gamepad mr-2"></i>2. 玩法与挑战 Game Modes</h3>
+                <div class="space-y-4 bg-stone-900 bg-opacity-60 p-5 rounded-2xl border border-stone-800">
+                    <h3 class="text-lg font-bold text-yellow-400"><i class="fa-solid fa-gamepad mr-2"></i>2. 玩法与挑战 Game Modes</h3>
 
                     <div>
-                        <label class="block text-sm font-semibold text-stone-700 mb-1">控制模式 Interaction:</label>
+                        <label class="block text-xs font-semibold text-stone-400 mb-2">控制模式 Interaction:</label>
                         <div class="grid grid-cols-2 gap-2" id="controlGroup">
-                            <button class="control-btn py-3 px-4 bg-orange-500 text-white ring-4 ring-orange-300 border-orange-600 scale-105 shadow-md rounded-xl font-bold transition-all text-sm flex flex-col items-center justify-center" data-val="eat">
+                            <button class="control-btn py-3 px-4 bg-orange-500 text-white ring-4 ring-orange-400 border-orange-600 scale-105 shadow-md rounded-xl font-bold transition-all text-sm flex flex-col items-center justify-center" data-val="eat">
                                 <span class="text-xl mb-1">👄</span>
                                 <span>张嘴吃字 Mouth Eater</span>
                             </button>
-                            <button class="control-btn py-3 px-4 bg-white text-stone-700 border-2 border-stone-300 rounded-xl font-bold transition-all text-sm flex flex-col items-center justify-center hover:border-orange-500" data-val="tap">
+                            <button class="control-btn py-3 px-4 bg-stone-800 text-stone-300 border-2 border-stone-700 rounded-xl font-bold transition-all text-sm flex flex-col items-center justify-center hover:border-orange-500" data-val="tap">
                                 <span class="text-xl mb-1">🖱️</span>
                                 <span>点击射击 Click / Tap</span>
                             </button>
@@ -134,15 +139,15 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-semibold text-stone-700 mb-1">规则模式 Game Rule:</label>
+                        <label class="block text-xs font-semibold text-stone-400 mb-2">规则模式 Game Rule:</label>
                         <div class="grid grid-cols-3 gap-2" id="ruleGroup">
-                            <button class="rule-btn py-2 px-2 bg-orange-500 text-white ring-4 ring-orange-300 border-orange-600 scale-105 shadow-md rounded-xl font-bold transition-all text-xs" data-val="timed">
-                                ⏱️ 计时 60s
+                            <button class="rule-btn py-2 px-2 bg-orange-500 text-white ring-4 ring-orange-400 border-orange-600 scale-105 shadow-md rounded-xl font-bold transition-all text-xs" data-val="timed">
+                                ⏱️ 计时 90s
                             </button>
-                            <button class="rule-btn py-2 px-2 bg-white text-stone-700 border-2 border-stone-300 rounded-xl font-bold transition-all text-xs hover:border-orange-500" data-val="points">
+                            <button class="rule-btn py-2 px-2 bg-stone-800 text-stone-300 border-2 border-stone-700 rounded-xl font-bold transition-all text-xs hover:border-orange-500" data-val="points">
                                 🎯 积分 150pt
                             </button>
-                            <button class="rule-btn py-2 px-2 bg-white text-stone-700 border-2 border-stone-300 rounded-xl font-bold transition-all text-xs hover:border-orange-500" data-val="unlimited">
+                            <button class="rule-btn py-2 px-2 bg-stone-800 text-stone-300 border-2 border-stone-700 rounded-xl font-bold transition-all text-xs hover:border-orange-500" data-val="unlimited">
                                 ♾️ 无限休闲
                             </button>
                         </div>
@@ -156,7 +161,7 @@
         </section>
 
         <!-- GAME PLAY AREA -->
-        <section id="gameArea" class="hidden relative w-full h-[65vh] md:h-[70vh] bg-stone-900 rounded-3xl overflow-hidden comic-border flex items-center justify-center">
+        <section id="gameArea" class="hidden relative w-full h-[65vh] md:h-[70vh] bg-black rounded-3xl overflow-hidden comic-border flex items-center justify-center">
             
             <!-- Camera Video Stream -->
             <video id="webcam" class="absolute w-full h-full object-cover scale-x-[-1] hidden pointer-events-none" autoplay playsinline></video>
@@ -165,39 +170,64 @@
             <canvas id="gameCanvas" class="absolute w-full h-full z-10 cursor-crosshair"></canvas>
 
             <!-- Loading camera overlay state -->
-            <div id="cameraLoading" class="absolute inset-0 bg-stone-950 bg-opacity-90 flex flex-col items-center justify-center text-white space-y-4 z-20">
+            <div id="cameraLoading" class="absolute inset-0 bg-stone-950 bg-opacity-95 flex flex-col items-center justify-center text-white space-y-4 z-20">
                 <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-orange-500"></div>
                 <h3 class="text-xl font-bold">📷 正在启动前置摄像头...</h3>
                 <p class="text-sm text-stone-400">Loading tracking system, please allow webcam access.</p>
             </div>
 
+            <!-- LEVEL-UP CONGRATULATORY CELEBRATION OVERLAY -->
+            <div id="levelUpOverlay" class="absolute inset-0 bg-stone-950 bg-opacity-90 flex flex-col items-center justify-center z-25 hidden pointer-events-auto">
+                <div class="text-center space-y-4 p-8 bg-stone-900 border-4 border-yellow-400 rounded-3xl shadow-2xl max-w-md scale-95 transition-transform duration-500" id="levelUpBox">
+                    <div class="text-7xl animate-bounce">🎉 🥳 🎉</div>
+                    <h2 class="text-5xl font-black text-yellow-400" style="font-family: 'ZCOOL KuaiLe', sans-serif;">升级啦！</h2>
+                    <h3 class="text-3xl font-bold text-white">LEVEL UP!</h3>
+                    <p class="text-stone-300 text-lg">你真棒！已经成功升到 <span id="celebLevelText" class="text-yellow-400 font-extrabold text-2xl">2</span> 级了！</p>
+                    <div class="py-2 px-6 bg-yellow-400 text-stone-950 font-black rounded-full shadow-lg inline-block uppercase tracking-wide">Excellent Progress!</div>
+                </div>
+            </div>
+
+            <!-- SAFETY COUNTDOWN SHIELD OVERLAY -->
+            <div id="countdownOverlay" class="absolute inset-0 bg-stone-950 bg-opacity-80 flex flex-col items-center justify-center z-20 hidden pointer-events-auto">
+                <div class="text-center space-y-3">
+                    <h3 class="text-xl font-bold text-orange-400 uppercase tracking-widest">准备回到汉字闯关</h3>
+                    <h4 class="text-sm text-stone-400 mb-6">Ready to resume, keep steady!</h4>
+                    <div id="countdownNumber" class="text-9xl font-black text-yellow-400 animate-ping">3</div>
+                </div>
+            </div>
+
             <!-- HUD Dashboard Overlay -->
-            <div class="absolute top-4 left-4 right-4 flex justify-between items-start z-20 pointer-events-none">
+            <div class="absolute top-4 left-4 right-4 flex justify-between items-start z-10 pointer-events-none">
                 <!-- Word Target Placard Card -->
-                <div class="bg-white rounded-2xl p-4 border-4 border-amber-950 shadow-md max-w-xs md:max-w-md pointer-events-auto flex items-center space-x-3">
+                <div class="bg-black bg-opacity-80 rounded-2xl p-4 border-4 border-white shadow-lg max-w-xs md:max-w-md pointer-events-auto flex items-center space-x-4">
                     <div>
-                        <p id="placardCategory" class="text-xs text-orange-600 font-bold uppercase tracking-widest">根据拼音找出词语 Find by Pinyin:</p>
-                        <h2 id="targetWordText" class="text-3xl md:text-4xl font-extrabold text-stone-900 leading-tight">加载中...</h2>
-                        <p id="targetWordTranslation" class="text-sm text-stone-600 font-semibold italic">...</p>
+                        <p id="placardCategory" class="text-xs text-orange-400 font-bold uppercase tracking-widest">根据拼音找出词语 Find by Pinyin:</p>
+                        <h2 id="targetWordText" class="text-3xl md:text-5xl font-extrabold text-cyan-300 leading-tight tracking-wider" style="text-shadow: 0 0 10px rgba(6, 182, 212, 0.8);">加载中...</h2>
+                        <p id="targetWordTranslation" class="text-sm text-stone-300 font-semibold italic">...</p>
                     </div>
-                    <button id="speakTargetBtn" class="bg-orange-500 hover:bg-orange-600 text-white rounded-xl p-3 shadow border-2 border-orange-600 transition-all">
+                    <button id="speakTargetBtn" class="bg-orange-500 hover:bg-orange-600 text-white rounded-xl p-3 shadow border-2 border-white transition-all">
                         <i class="fa-solid fa-volume-high text-lg"></i>
                     </button>
                 </div>
 
                 <!-- Game Stats Panel -->
                 <div class="flex flex-col space-y-2 pointer-events-auto">
-                    <div class="bg-white rounded-2xl py-2 px-4 border-4 border-amber-950 shadow-md flex justify-between items-center space-x-4">
-                        <span class="text-stone-600 font-bold text-sm">分数 SCORE:</span>
-                        <span id="scoreDisplay" class="text-3xl font-extrabold text-green-600">0</span>
+                    <div class="bg-black bg-opacity-80 rounded-2xl py-2 px-4 border-2 border-stone-700 shadow-md flex justify-between items-center space-x-4">
+                        <span class="text-stone-400 font-bold text-sm">分数 SCORE:</span>
+                        <span id="scoreDisplay" class="text-3xl font-extrabold text-green-400">0</span>
                     </div>
-                    <div id="metricCard" class="bg-white rounded-2xl py-2 px-4 border-4 border-amber-950 shadow-md flex justify-between items-center space-x-4">
-                        <span id="metricLabel" class="text-stone-600 font-bold text-sm">时间 TIMER:</span>
-                        <span id="metricDisplay" class="text-3xl font-extrabold text-blue-600">60</span>
+                    <!-- Combined HUD showing both Points & Mini Game Coins separately -->
+                    <div id="coinCard" class="bg-black bg-opacity-85 rounded-2xl py-2 px-4 border-2 border-yellow-500 shadow-md flex justify-between items-center space-x-4 hidden">
+                        <span class="text-yellow-400 font-bold text-sm">金币 COINS:</span>
+                        <span id="coinDisplay" class="text-3xl font-extrabold text-yellow-300">0</span>
                     </div>
-                    <div class="bg-white rounded-2xl py-2 px-4 border-4 border-amber-950 shadow-md flex justify-between items-center space-x-4">
-                        <span class="text-stone-600 font-bold text-sm">等级 LEVEL:</span>
-                        <span id="gameLevelDisplay" class="text-3xl font-extrabold text-orange-500">1</span>
+                    <div id="metricCard" class="bg-black bg-opacity-80 rounded-2xl py-2 px-4 border-2 border-stone-700 shadow-md flex justify-between items-center space-x-4">
+                        <span id="metricLabel" class="text-stone-400 font-bold text-sm">时间 TIMER:</span>
+                        <span id="metricDisplay" class="text-3xl font-extrabold text-blue-400">90</span>
+                    </div>
+                    <div class="bg-black bg-opacity-80 rounded-2xl py-2 px-4 border-2 border-stone-700 shadow-md flex justify-between items-center space-x-4">
+                        <span class="text-stone-400 font-bold text-sm">等级 LEVEL:</span>
+                        <span id="gameLevelDisplay" class="text-3xl font-extrabold text-orange-400">1</span>
                     </div>
                 </div>
             </div>
@@ -209,18 +239,22 @@
         </section>
 
         <!-- GAME OVER BOARD -->
-        <section id="gameOverScreen" class="hidden w-full max-w-xl bg-white rounded-3xl p-8 comic-border comic-shadow flex flex-col items-center text-center space-y-6 z-20">
-            <h2 id="endTitle" class="text-4xl text-orange-600 font-extrabold">🏆 精彩极了！</h2>
-            <p id="endSubtitle" class="text-stone-600 text-lg">你完成了一场极佳的华文挑战。</p>
+        <section id="gameOverScreen" class="hidden w-full max-w-xl setup-card rounded-3xl p-8 flex flex-col items-center text-center space-y-6 z-20">
+            <h2 id="endTitle" class="text-4xl text-orange-400 font-extrabold">🏆 精彩极了！</h2>
+            <p id="endSubtitle" class="text-stone-300 text-lg">你完成了一场极佳 of 华文挑战。</p>
             
-            <div class="bg-orange-50 p-6 rounded-2xl border-2 border-orange-200 w-full grid grid-cols-2 gap-4">
+            <div class="bg-stone-900 bg-opacity-60 p-6 rounded-2xl border border-stone-800 w-full grid grid-cols-3 gap-4">
                 <div>
-                    <p class="text-stone-500 text-sm">最终分数 Final Score</p>
-                    <h3 id="endScore" class="text-4xl font-extrabold text-orange-600">120</h3>
+                    <p class="text-stone-400 text-xs">最终分数 Score</p>
+                    <h3 id="endScore" class="text-3xl font-extrabold text-orange-400">120</h3>
                 </div>
                 <div>
-                    <p class="text-stone-500 text-sm">掌握词汇 Mastered Words</p>
-                    <h3 id="endMasteredCount" class="text-4xl font-extrabold text-green-600">8</h3>
+                    <p class="text-stone-400 text-xs">收集金币 Coins</p>
+                    <h3 id="endCoins" class="text-3xl font-extrabold text-yellow-400">0</h3>
+                </div>
+                <div>
+                    <p class="text-stone-400 text-xs">掌握词汇 Mastered</p>
+                    <h3 id="endMasteredCount" class="text-3xl font-extrabold text-green-400">8</h3>
                 </div>
             </div>
 
@@ -236,19 +270,37 @@
     </main>
 
     <!-- SLIDE-OUT PANEL FOR ARCHIVED WORD HISTORY -->
-    <div id="historyDrawer" class="fixed right-0 top-0 bottom-0 w-80 bg-stone-50 border-l-4 border-amber-950 z-40 transform translate-x-full transition-transform duration-300 flex flex-col">
-        <div class="bg-orange-500 text-white p-4 border-b-4 border-amber-950 flex justify-between items-center">
-            <h3 class="font-black text-xl"><i class="fa-solid fa-trophy mr-2 text-yellow-300"></i>我掌握的词语</h3>
+    <div id="historyDrawer" class="fixed right-0 top-0 bottom-0 w-80 bg-stone-950 border-l-4 border-amber-950 z-40 transform translate-x-full transition-transform duration-300 flex flex-col">
+        <div class="bg-stone-900 text-white p-4 border-b-4 border-amber-950 flex justify-between items-center">
+            <h3 class="font-black text-xl text-orange-400"><i class="fa-solid fa-trophy mr-2 text-yellow-300"></i>大闯关成绩单</h3>
             <button id="closeDrawerBtn" class="text-white hover:text-orange-200 text-2xl"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <div id="historyList" class="flex-1 overflow-y-auto p-4 space-y-3">
-            <!-- Placeholders for words eaten correctly -->
-            <p id="emptyHistoryMsg" class="text-stone-400 text-center py-8">目前还没有掌握词汇，开始游戏吞掉它们吧！</p>
+        
+        <!-- Toggle Tabs: Mastered vs Mistakes -->
+        <div class="flex border-b-2 border-amber-950 bg-stone-900">
+            <button id="tabCorrect" class="flex-1 py-3 text-center font-bold text-green-400 border-b-4 border-green-500 bg-stone-900 bg-opacity-40 transition-all">
+                <i class="fa-solid fa-circle-check mr-1"></i> 正确 (<span id="countCorrect">0</span>)
+            </button>
+            <button id="tabWrong" class="flex-1 py-3 text-center font-bold text-stone-400 border-b-4 border-transparent hover:text-red-400 transition-all">
+                <i class="fa-solid fa-triangle-exclamation mr-1"></i> 错题 (<span id="countWrong">0</span>)
+            </button>
+        </div>
+
+        <!-- tab list scrolls container -->
+        <div class="flex-1 overflow-y-auto p-4">
+            <!-- Correct answers scroll stack -->
+            <div id="historyCorrectList" class="space-y-3">
+                <p id="emptyHistoryMsg" class="text-stone-500 text-center py-8">目前还没有掌握词汇，开始游戏吞掉它们吧！</p>
+            </div>
+            <!-- Incorrect answers scroll stack (hidden initially) -->
+            <div id="historyWrongList" class="space-y-3 hidden">
+                <p id="emptyWrongMsg" class="text-stone-500 text-center py-8">很棒！目前没有错题记录。</p>
+            </div>
         </div>
     </div>
 
     <!-- FOOTER COPYRIGHT SECTION -->
-    <footer class="w-full text-center py-2 text-xs text-stone-500 font-medium bg-amber-50 border-t-2 border-orange-200">
+    <footer class="w-full text-center py-2 text-xs text-stone-500 font-medium bg-stone-950 border-t-2 border-stone-900">
         Aligns directly with Ministry of Education (MOE) Singapore Chinese Curriculums. Designed for interactive revision.
     </footer>
 
@@ -291,7 +343,7 @@
                     { word: "橡皮", pinyin: "xiàng pí", translation: "Eraser" },
                     { word: "桌子", pinyin: "zhuō zi", translation: "Table" },
                     { word: "椅子", pinyin: "yǐ zi", translation: "Chair" },
-                    { word: "教室", pinyin: "jiào shì", translation: "Classroom" },
+                    { word: "教室", pinyin: "jiào  shì", translation: "Classroom" },
                     { word: "同学", pinyin: "tóng xué", translation: "Classmate" },
                     { word: "爸爸", pinyin: "bà ba", translation: "Father" },
                     { word: "妈妈", pinyin: "mā ma", translation: "Mother" },
@@ -311,7 +363,7 @@
                 'higher': [
                     { word: "铅笔", pinyin: "qiān bǐ", translation: "Pencil" },
                     { word: "游戏", pinyin: "yóu xì", translation: "Game" },
-                    { word: "懂事", pinyin: "dǒng shì", translation: "Sensible" },
+                    { word: "懂事", pinyin: "dǒng  shì", translation: "Sensible" },
                     { word: "感谢", pinyin: "gǎn xiè", translation: "Thankful" },
                     { word: "认真", pinyin: "rèn zhēn", translation: "Seriousness/Diligent" },
                     { word: "遵守", pinyin: "zūn shǒu", translation: "Obide by" },
@@ -322,7 +374,7 @@
                     { word: "勇敢", pinyin: "yǒng gǎn", translation: "Brave" },
                     { word: "习惯", pinyin: "xí guàn", translation: "Habit" },
                     { word: "分享", pinyin: "fēn xiǎng", translation: "Share" },
-                    { word: "合作", pinyin: "hé zuò", translation: "Cooperate" },
+                    { word: "合作", pinyin: "hé zoù", translation: "Cooperate" },
                     { word: "关心", pinyin: "guān xīn", translation: "Care/Concern" },
                     { word: "讲道理", pinyin: "jiǎng dào li", translation: "Be reasonable" },
                     { word: "改正", pinyin: "gǎi zhèng", translation: "Correct" },
@@ -410,7 +462,7 @@
                     { word: "睡觉", pinyin: "shuì jiào", translation: "Sleep" },
                     { word: "衣服", pinyin: "yī fu", translation: "Clothes" },
                     { word: "玩具", pinyin: "wán jù", translation: "Toy" },
-                    { word: "教室", pinyin: "jiào shì", translation: "Classroom" },
+                    { word: "教室", pinyin: "jiào  shì", translation: "Classroom" },
                     { word: "同学", pinyin: "tóng xué", translation: "Classmate" },
                     { word: "干净", pinyin: "gān jìng", translation: "Clean" },
                     { word: "读书", pinyin: "dú shū", translation: "Read/Study" },
@@ -511,7 +563,7 @@
                     { word: "意见", pinyin: "yì jiàn", translation: "Opinion" },
                     { word: "机会", pinyin: "jī huì", translation: "Opportunity" },
                     { word: "关系", pinyin: "guān xì", translation: "Relationship" },
-                    { word: "总是", pinyin: "zǒng shì", translation: "Always" },
+                    { word: "总是", pinyin: "zǒng  shì", translation: "Always" },
                     { word: "经过", pinyin: "jīng guò", translation: "Pass through" },
                     { word: "必须", pinyin: "bì xū", translation: "Must" },
                     { word: "准备", pinyin: "zhǔn bèi", translation: "Prepare" },
@@ -527,17 +579,7 @@
                     { word: "花朵", pinyin: "huā duǒ", translation: "Flower" },
                     { word: "扫地", pinyin: "sǎo dì", translation: "Sweep floor" },
                     { word: "照顾", pinyin: "zhào gù", translation: "Take care of" },
-                    { word: "安全", pinyin: "ān quán", translation: "Safe/Safety" },
-                    { word: "时候", pinyin: "shí hou", translation: "Time" },
-                    { word: "以前", pinyin: "yǐ qián", translation: "Before" },
-                    { word: "以后", pinyin: "yǐ hòu", translation: "After" },
-                    { word: "玩耍", pinyin: "wán shuǎ", translation: "Play" },
-                    { word: "跑步", pinyin: "pǎo bù", translation: "Run" },
-                    { word: "睡觉", pinyin: "shuì jiào", translation: "Sleep" },
-                    { word: "书包", pinyin: "shū bāo", translation: "Schoolbag" },
-                    { word: "美丽", pinyin: "měi lì", translation: "Beautiful" },
-                    { word: "读书", pinyin: "dú shū", translation: "Read/Study" },
-                    { word: "操场", pinyin: "cāo chǎng", translation: "Playground" }
+                    { word: "安全", pinyin: "ān quán", translation: "Safe/Safety" }
                 ],
                 'higher': [
                     { word: "得意", pinyin: "dé yì", translation: "Proud of oneself" },
@@ -596,7 +638,7 @@
                     { word: "坚持", pinyin: "jiān chí", translation: "Persevere" },
                     { word: "分享", pinyin: "fēn xiǎng", translation: "Share" },
                     { word: "讨论", pinyin: "tǎo lùn", translation: "Discuss" },
-                    { word: "合作", pinyin: "hé zuò", translation: "Cooperate" },
+                    { word: "合作", pinyin: "hé zoù", translation: "Cooperate" },
                     { word: "规矩", pinyin: "guī ju", translation: "Rules" },
                     { word: "纠纷", pinyin: "jiū fēn", translation: "Dispute" },
                     { word: "解决", pinyin: "jiě jué", translation: "Resolve" }
@@ -645,7 +687,7 @@
                     { word: "关系", pinyin: "guān xì", translation: "Relationship" },
                     { word: "举行", pinyin: "jǔ xíng", translation: "Hold (event)" },
                     { word: "事情", pinyin: "shì qing", translation: "Matter/Business" },
-                    { word: "总是", pinyin: "zǒng shì", translation: "Always" },
+                    { word: "总是", pinyin: "zǒng  shì", translation: "Always" },
                     { word: "经过", pinyin: "jīng guò", translation: "Pass through" },
                     { word: "已经", pinyin: "yǐ jīng", translation: "Already" },
                     { word: "发现", pinyin: "fā xiàn", translation: "Discover/Find" },
@@ -657,20 +699,11 @@
                     { word: "跑步", pinyin: "pǎo bù", translation: "Run" },
                     { word: "睡觉", pinyin: "shuì jiào", translation: "Sleep" },
                     { word: "美丽", pinyin: "měi lì", translation: "Beautiful" },
-                    { word: "操场", pinyin: "cāo chǎng", translation: "Playground" },
-                    { word: "should", pinyin: "yīng gāi", translation: "应该" },
-                    { word: "觉得", pinyin: "jué de", translation: "Feel/Think" },
-                    { word: "帮忙", pinyin: "bāng máng", translation: "Help" },
-                    { word: "常常", pinyin: "cháng cháng", translation: "Often" },
-                    { word: "安全", pinyin: "ān quán", translation: "Safe" },
-                    { word: "游戏", pinyin: "yóu xì", translation: "Game" },
                     { word: "读书", pinyin: "dú shū", translation: "Read/Study" },
-                    { word: "礼物", pinyin: "lǐ wù", translation: "Gift" },
-                    { word: "变化", pinyin: "biàn huà", translation: "Change" },
-                    { word: "感觉", pinyin: "gǎn jué", translation: "Feeling" }
+                    { word: "操场", pinyin: "cāo chǎng", translation: "Playground" }
                 ],
                 'higher': [
-                    { word: "惭愧", pinyin: "cán kuì", translation: "Ashamed" },
+                    { word: "残留", pinyin: "cán liú", translation: "Remnant / Leftover" },
                     { word: "羡慕", pinyin: "xiàn mù", translation: "Envy" },
                     { word: "愤怒", pinyin: "fèn nù", translation: "Angry/Furious" },
                     { word: "抱怨", pinyin: "bào yuàn", translation: "Complain" },
@@ -713,7 +746,7 @@
                     { word: "改正", pinyin: "gǎi zhèng", translation: "Correct/Amend" },
                     { word: "进步", pinyin: "jìn bù", translation: "Progress" },
                     { word: "诚实", pinyin: "chéng shí", translation: "Honest" },
-                    { word: "懂事", pinyin: "dǒng_shì", translation: "Sensible" },
+                    { word: "懂事", pinyin: "dǒng  shì", translation: "Sensible" },
                     { word: "勇敢", pinyin: "yǒng gǎn", translation: "Brave" },
                     { word: "自私", pinyin: "zì sī", translation: "Selfish" },
                     { word: "坚持", pinyin: "jiān chí", translation: "Persevere" },
@@ -723,7 +756,7 @@
                     { word: "讲道理", pinyin: "jiǎng dào li", translation: "Be reasonable" },
                     { word: "宽容", pinyin: "kuān róng", translation: "Tolerant" },
                     { word: "解决", pinyin: "jiě jué", translation: "Resolve" },
-                    { word: "合作", pinyin: "hé zuò", translation: "Cooperate" },
+                    { word: "合作", pinyin: "hé zoù", translation: "Cooperate" },
                     { word: "纠纷", pinyin: "jiū fēn", translation: "Dispute" },
                     { word: "容忍", pinyin: "róng rěn", translation: "Tolerate" },
                     { word: "谦虚", pinyin: "qiān xū", translation: "Humble" },
@@ -790,7 +823,7 @@
                     { word: "检查", pinyin: "jiǎn chá", translation: "Check" },
                     { word: "准备", pinyin: "zhǔn bèi", translation: "Prepare" },
                     { word: "举行", pinyin: "jǔ xíng", translation: "Hold (event)" },
-                    { word: "总是", pinyin: "zǒng shì", translation: "Always" },
+                    { word: "总是", pinyin: "zǒng  shì", translation: "Always" },
                     { word: "经过", pinyin: "jīng guò", translation: "Pass through" },
                     { word: "已经", pinyin: "yǐ jīng", translation: "Already" },
                     { word: "方便", pinyin: "fāng biàn", translation: "Convenient" },
@@ -799,17 +832,7 @@
                     { word: "以前", pinyin: "yǐ qián", translation: "Before" },
                     { word: "以后", pinyin: "yǐ hòu", translation: "After" },
                     { word: "跑步", pinyin: "pǎo bù", translation: "Run" },
-                    { word: "操场", pinyin: "cāo chǎng", translation: "Playground" },
-                    { word: "应该", pinyin: "yīng gāi", translation: "Should" },
-                    { word: "觉得", pinyin: "jué de", translation: "Feel/Think" },
-                    { word: "常常", pinyin: "cháng cháng", translation: "Often" },
-                    { word: "关系", pinyin: "guān xì", translation: "Relationship" },
-                    { word: "感觉", pinyin: "gǎn jué", translation: "Feeling" },
-                    { word: "读书", pinyin: "dú shū", translation: "Read/Study" },
-                    { word: "写字", pinyin: "xiě zì", translation: "Write characters" },
-                    { word: "朋友", pinyin: "péng you", translation: "Friend" },
-                    { word: "老师", pinyin: "lǎo shī", translation: "Teacher" },
-                    { word: "学校", pinyin: "xué xiào", translation: "School" }
+                    { word: "操场", pinyin: "cāo chǎng", translation: "Playground" }
                 ],
                 'higher': [
                     { word: "齐心协力", pinyin: "qí xīn xié lì", translation: "Work as one" },
@@ -820,12 +843,12 @@
                     { word: "毅力", pinyin: "yì lì", translation: "Willpower" },
                     { word: "关键", pinyin: "guān jiàn", translation: "Key/Crucial" },
                     { word: "掌握", pinyin: "zhǎng wò", translation: "Master/Grasp" },
-                    { word: "卓越", pinyin: "zhuó yuè", translation: "Outstanding" },
+                    { word: "卓越", pinyin: "zhuó yûe", translation: "Outstanding" },
                     { word: "荣誉", pinyin: "róng yù", translation: "Honor" },
                     { word: "敬佩", pinyin: "jìng pèi", translation: "Admire" },
                     { word: "执着", pinyin: "zhí zhuó", translation: "Persistent" },
                     { word: "宽大", pinyin: "kuān dà", translation: "Generous" },
-                    { word: "忠诚", pinyin: "zhōng chéng", translation: "Loyal" },
+                    { word: "忠诚", pinyin: "zhōng cheng", translation: "Loyal" },
                     { word: "坚持不懈", pinyin: "jiān chí bú xiè", translation: "Unremitting perseverance" },
                     { word: "见义勇为", pinyin: "jiàn yì yǒng wéi", translation: "Act courageously" },
                     { word: "大公无私", pinyin: "dài gōng wú sī", translation: "Unselfish/Just" },
@@ -843,49 +866,40 @@
                     { word: "友谊", pinyin: "yǒu yì", translation: "Friendship" },
                     { word: "珍惜", pinyin: "zhēn xī", translation: "Cherish" },
                     { word: "信任", pinyin: "xìn rèn", translation: "Trust" },
-                    { word: "谦虚", pinyin: "qiān xū", translation: "Humble" },
-                    { word: "骄傲", pinyin: "jiāo ào", translation: "Proud/Arrogant" },
-                    { word: "解决", pinyin: "jiě jué", translation: "Resolve" },
-                    { word: "矛盾", pinyin: "máo dùn", translation: "Conflict" },
-                    { word: "宽容", pinyin: "kuān róng", translation: "Tolerant" },
-                    { word: "歉意", pinyin: "qiān yì", translation: "Apology" },
-                    { word: "争吵", pinyin: "zhēng chǎo", translation: "Quarrel" },
-                    { word: "容忍", pinyin: "róng rěn", translation: "Tolerate" },
-                    { word: "得意", pinyin: "dé yì", translation: "Proud of oneself" },
-                    { word: "顺便", pinyin: "shùn biàn", translation: "By the way" },
-                    { word: "赶紧", pinyin: "gǎn jǐn", translation: "Hurriedly" },
-                    { word: "故意", pinyin: "gù yì", translation: "Intentionally" },
-                    { word: "赞成", pinyin: "zàn chéng", translation: "Agree/Approve" },
-                    { word: "解决", pinyin: "jiě jué", translation: "Resolve" },
-                    { word: "体谅", pinyin: "tǐ liàng", translation: "Show understanding" },
-                    { word: "成绩", pinyin: "chéng jì", translation: "Result/Grades" },
-                    { word: "遵守", pinyin: "zūn shǒu", translation: "Abide by" },
-                    { word: "礼貌", pinyin: "lǐ mào", translation: "Polite" },
-                    { word: "保护", pinyin: "bǎo hù", translation: "Protect" },
-                    { word: "困难", pinyin: "kùn nan", translation: "Difficulties" },
-                    { word: "危险", pinyin: "wēi xiǎn", translation: "Danger" },
-                    { word: "仔细", pinyin: "zǐ xì", translation: "Careful" },
-                    { word: "照顾", pinyin: "zhào gù", translation: "Take care of" },
-                    { word: "诚实", pinyin: "chéng shí", translation: "Honest" },
-                    { word: "进步", pinyin: "jìn bù", translation: "Progress" },
-                    { word: "帮助", pinyin: "bāng zhù", translation: "Help" },
-                    { word: "认真", pinyin: "rèn zhēn", translation: "Serious/Diligent" },
-                    { word: "努力", pinyin: "nǔ lì", translation: "Hardworking" },
-                    { word: "关心", pinyin: "guān xīn", translation: "Care/Concern" },
-                    { word: "改正", pinyin: "gǎi zhèng", translation: "Correct" },
-                    { word: "安全", pinyin: "ān quán", translation: "Safe/Safety" },
-                    { word: "节约", pinyin: "jiē yuē", translation: "Save" },
-                    { word: "懂事", pinyin: "dǒng_shì", translation: "Sensible" },
-                    { word: "勇敢", pinyin: "yǒng gǎn", translation: "Brave" },
-                    { word: "自私", pinyin: "zì sī", translation: "Selfish" },
-                    { word: "大方", pinyin: "dà fāng", translation: "Generous" },
-                    { word: "配合", pinyin: "pèi hé", translation: "Cooperate" },
-                    { word: "习惯", pinyin: "xí guàn", translation: "Habit" },
-                    { word: "意外", pinyin: "yì wài", translation: "Accident" },
-                    { word: "同伴", pinyin: "tóng bàn", translation: "Companion" },
-                    { word: "限制", pinyin: "xiàn zhì", translation: "Restrict" },
-                    { word: "陪伴", pinyin: "péi bàn", translation: "Accompany" },
-                    { word: "包容", pinyin: "bāo róng", translation: "Tolerate/Accept" }
+                    { word: "得意外形", pinyin: "dé yì wài xíng", translation: "得意 (recap)" },
+                    { word: "解决问题", pinyin: "jiě jué wèn tí", translation: "解决 (recap)" },
+                    { word: "宽容大度", pinyin: "kuān róng dà dù", translation: "宽容 (recap)" },
+                    { word: "勤奋学习", pinyin: "qín fèn xué xí", translation: "勤奋 (recap)" },
+                    { word: "勇敢面对", pinyin: "yǒng gǎn miàn duì", translation: "勇敢 (recap)" },
+                    { word: "谦虚好学", pinyin: "qiān xū hao xué", translation: "谦虚 (recap)" },
+                    { word: "克服困难", pinyin: "kè fú kùn nan", translation: "克服 (recap)" },
+                    { word: "仔细检查", pinyin: "zǐ xì jiǎn chá", translation: "仔细 (recap)" },
+                    { word: "照顾病患", pinyin: "zhào gù bìng huàn", translation: "照顾 (recap)" },
+                    { word: "保护自然", pinyin: "bǎo hù zì rán", translation: "保护 (recap)" },
+                    { word: "讲究礼貌", pinyin: "jiǎng jiù lǐ mào", translation: "礼貌 (recap)" },
+                    { word: "配合默契", pinyin: "pèi hé mò qì", translation: "配合 (recap)" },
+                    { word: "犹豫不决", pinyin: "yóu yù bù jué", translation: "犹豫 (recap)" },
+                    { word: "持之以恒", pinyin: "chí zhī yǐ héng", translation: "持之以恒 (recap)" },
+                    { word: "坚持到底", pinyin: "jiān chí dào dǐ", translation: "坚持 (recap)" },
+                    { word: "遵守规则", pinyin: "zūn shǒu guī zé", translation: "遵守 (recap)" },
+                    { word: "认真思考", pinyin: "rèn zhēn sī kǎo", translation: "认真 (recap)" },
+                    { word: "友谊长存", pinyin: "yǒu yì cháng cún", translation: "友谊 (recap)" },
+                    { word: "相互谅解", pinyin: "xiāng hù liàng jiě", translation: "谅解 (recap)" },
+                    { word: "原谅他人", pinyin: "yuán liàng tā rén", translation: "原谅 (recap)" },
+                    { word: "安全第一", pinyin: "ān quán dì yī", translation: "安全 (recap)" },
+                    { word: "珍惜时间", pinyin: "zhēn xī shí jiān", translation: "珍惜 (recap)" },
+                    { word: "节约用水", pinyin: "jiē yuē yòng shuǐ", translation: "节约 (recap)" },
+                    { word: "感谢恩师", pinyin: "gǎn xiè ēn shī", translation: "感谢 (recap)" },
+                    { word: "诚实守信", pinyin: "chéng shí shǒu xìn", translation: "诚实 (recap)" },
+                    { word: "大方待人", pinyin: "dà fāng dài rén", translation: "大方 (recap)" },
+                    { word: "规规矩矩", pinyin: "guī guī jǔ jǔ", translation: "规矩 (recap)" },
+                    { word: "陪伴左右", pinyin: "péi bàn zuǒ yòu", translation: "陪伴 (recap)" },
+                    { word: "包容理解", pinyin: "bāo rong lǐ jiě", translation: "包容 (recap)" },
+                    { word: "虚心请教", pinyin: "xū xīn qǐng jiào", translation: "虚心 (recap)" },
+                    { word: "大公无私", pinyin: "dài gōng wú sī", translation: "大公无私 (recap)" },
+                    { word: "见义勇为", pinyin: "jiàn yì yǒng wéi", translation: "见义勇为 (recap)" },
+                    { word: "舍己为人", pinyin: "shě jǐ wèi rén", translation: "舍己为人 (recap)" },
+                    { word: "同舟共济", pinyin: "tóng zhōu gòng jì", translation: "同舟共济 (recap)" }
                 ]
             },
             'P6': {
@@ -942,7 +956,7 @@
                     { word: "支持", pinyin: "zhī chí", translation: "Support" },
                     { word: "信心", pinyin: "xìn xīn", translation: "Confidence" },
                     { word: "明白", pinyin: "míng bai", translation: "Understand" },
-                    { word: "注意", pinyin: "zhù yì", translation: "Pay attention" },
+                    { word: "注意", pinyin: "zhù  yì", translation: "Pay attention" },
                     { word: "突然", pinyin: "tū rán", translation: "Suddenly" },
                     { word: "特别", pinyin: "tè bié", translation: "Special" },
                     { word: "准备", pinyin: "zhǔn bèi", translation: "Prepare" },
@@ -1002,12 +1016,12 @@
                     { word: "毅力", pinyin: "yì lì", translation: "Willpower" },
                     { word: "关键", pinyin: "guān jiàn", translation: "Key/Crucial" },
                     { word: "掌握", pinyin: "zhǎng wò", translation: "Master/Grasp" },
-                    { word: "卓越", pinyin: "zhuó yuè", translation: "Outstanding" },
+                    { word: "卓越", pinyin: "zhuó yûe", translation: "Outstanding" },
                     { word: "荣誉", pinyin: "róng yù", translation: "Honor" },
                     { word: "敬佩", pinyin: "jìng pèi", translation: "Admire" },
                     { word: "执着", pinyin: "zhí zhuó", translation: "Persistent" },
                     { word: "宽大", pinyin: "kuān dà", translation: "Generous" },
-                    { word: "忠诚", pinyin: "zhōng chéng", translation: "Loyal" },
+                    { word: "忠诚", pinyin: "zhōng cheng", translation: "Loyal" },
                     { word: "坚持不懈", pinyin: "jiān chí bú xiè", translation: "Unremitting perseverance" },
                     { word: "见义勇为", pinyin: "jiàn yì yǒng wéi", translation: "Act courageously" },
                     { word: "大公无私", pinyin: "dài gōng wú sī", translation: "Unselfish/Just" },
@@ -1030,7 +1044,7 @@
                     { word: "宽容大度", pinyin: "kuān róng dà dù", translation: "宽容 (recap)" },
                     { word: "勤奋学习", pinyin: "qín fèn xué xí", translation: "勤奋 (recap)" },
                     { word: "勇敢面对", pinyin: "yǒng gǎn miàn duì", translation: "勇敢 (recap)" },
-                    { word: "谦虚好学", pinyin: "qiān xū hào xué", translation: "谦虚 (recap)" },
+                    { word: "谦虚好学", pinyin: "qiān xū hao xué", translation: "谦虚 (recap)" },
                     { word: "克服困难", pinyin: "kè fú kùn nan", translation: "克服 (recap)" },
                     { word: "仔细检查", pinyin: "zǐ xì jiǎn chá", translation: "仔细 (recap)" },
                     { word: "照顾病患", pinyin: "zhào gù bìng huàn", translation: "照顾 (recap)" },
@@ -1053,9 +1067,9 @@
                     { word: "大方待人", pinyin: "dà fāng dài rén", translation: "大方 (recap)" },
                     { word: "规规矩矩", pinyin: "guī guī jǔ jǔ", translation: "规矩 (recap)" },
                     { word: "陪伴左右", pinyin: "péi bàn zuǒ yòu", translation: "陪伴 (recap)" },
-                    { word: "包容理解", pinyin: "bāo róng lǐ jiě", translation: "包容 (recap)" },
+                    { word: "包容理解", pinyin: "bāo rong lǐ jiě", translation: "包容 (recap)" },
                     { word: "虚心请教", pinyin: "xū xīn qǐng jiào", translation: "虚心 (recap)" },
-                    { word: "大公无私", pinyin: "dà gōng wú sī", translation: "大公无私 (recap)" },
+                    { word: "大公无私", pinyin: "dài gōng wú sī", translation: "大公无私 (recap)" },
                     { word: "见义勇为", pinyin: "jiàn yì yǒng wéi", translation: "见义勇为 (recap)" },
                     { word: "舍己为人", pinyin: "shě jǐ wèi rén", translation: "舍己为人 (recap)" },
                     { word: "同舟共济", pinyin: "tóng zhōu gòng jì", translation: "同舟共济 (recap)" }
@@ -1063,9 +1077,12 @@
             }
         };
 
-        // WEB AUDIO SYSTEM FOR COOL SYNTH EFFECTS
+        // WEB AUDIO SYSTEM FOR COOL SYNTH EFFECTS & BACKGROUND MUSIC
         const AudioEngine = {
             ctx: null,
+            bgmInterval: null,
+            bgmStep: 0,
+            bgmMelody: [261.63, 293.66, 329.63, 392.00, 440.00, 392.00, 329.63, 293.66], // Pentatonic scale
             init() {
                 if (!this.ctx) {
                     this.ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1168,8 +1185,83 @@
                 filter.connect(gain);
                 gain.connect(this.ctx.destination);
                 noise.start();
+            },
+            playCountdownBeep(isLow = true) {
+                if (gameConfig.isMuted || !this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(isLow ? 440 : 880, this.ctx.currentTime);
+                gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.2);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.2);
+            },
+            startBGM() {
+                if (gameConfig.isMuted) return;
+                this.stopBGM();
+                this.init();
+                const ctx = this.ctx;
+                this.bgmStep = 0;
+                this.bgmInterval = setInterval(() => {
+                    if (gameConfig.isMuted || gameConfig.gameState === 'setup' || gameConfig.gameState === 'gameover' || gameConfig.gameState === 'countdown' || gameConfig.gameState === 'transition_pause' || gameConfig.gameState === 'celebration') {
+                        return;
+                    }
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    
+                    // Simple retro base progression + melodic sequencing
+                    if (this.bgmStep % 2 === 0) {
+                        // Soft rhythmic bass note
+                        const bassNotes = [130.81, 146.83, 164.81, 196.00];
+                        const note = bassNotes[Math.floor(this.bgmStep / 2) % bassNotes.length];
+                        osc.frequency.setValueAtTime(note, ctx.currentTime);
+                        gain.gain.setValueAtTime(0.02, ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+                        osc.type = 'triangle';
+                    } else {
+                        // Playful melodic sequence
+                        const note = this.bgmMelody[this.bgmStep % this.bgmMelody.length];
+                        osc.frequency.setValueAtTime(note, ctx.currentTime);
+                        gain.gain.setValueAtTime(0.015, ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+                        osc.type = 'sine';
+                    }
+                    
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.4);
+                    this.bgmStep++;
+                }, 250); // Loop tempo step
+            },
+            stopBGM() {
+                if (this.bgmInterval) {
+                    clearInterval(this.bgmInterval);
+                    this.bgmInterval = null;
+                }
             }
         };
+
+        // SPEECH SYNTHESIS ENGINE (好吃 / 难难 vocals on chomping)
+        function playChompVoice(isCorrect) {
+            if (gameConfig.isMuted) return;
+            window.speechSynthesis.cancel();
+            const msg = new SpeechSynthesisUtterance();
+            msg.lang = 'zh-CN';
+            if (isCorrect) {
+                msg.text = "好吃！";
+                msg.rate = 1.35;
+                msg.pitch = 1.35; // Bright, peppy cute voice!
+            } else {
+                msg.text = "难吃！";
+                msg.rate = 1.0;
+                msg.pitch = 0.8; // Low, funny yucky sound
+            }
+            window.speechSynthesis.speak(msg);
+        }
 
         // CURRENT GAME STATE
         const gameConfig = {
@@ -1179,11 +1271,13 @@
             selectedRule: 'timed',
             isMuted: false,
             score: 0,
-            metricVal: 60,
+            coins: 0, // Coins collected strictly in the bonus mini game
+            metricVal: 90, // Timed game set directly to 90s instead of 60s
             gameLevel: 1,
             lastBonusThreshold: 0, 
             gameState: 'setup', 
-            masteredWords: new Set()
+            masteredWords: new Set(),
+            mistakeWords: new Set() // Keeps track of wrong attempts uniquely
         };
 
         // SELECT SETUP MODES DYNAMICALLY WITH STYLISH AND UNMISTAKABLE SELECTION UI
@@ -1196,11 +1290,11 @@
                     
                     // Reset all sibling buttons to clean inactive style
                     buttons.forEach(b => {
-                        b.className = `${groupClass} py-2 px-3 bg-white text-stone-700 border-2 border-stone-300 rounded-xl font-bold transition-all text-sm hover:border-orange-500`;
+                        b.className = `${groupClass} py-2 px-3 bg-stone-800 text-stone-300 border-2 border-stone-700 rounded-xl font-bold transition-all text-sm hover:border-orange-500`;
                     });
                     
                     // Style the selected button with beautiful high-contrast design
-                    btn.className = `${groupClass} py-2 px-3 bg-orange-500 text-white ring-4 ring-orange-300 border-orange-600 scale-105 shadow-md rounded-xl font-bold transition-all text-sm`;
+                    btn.className = `${groupClass} py-2 px-3 bg-orange-500 text-white ring-4 ring-orange-400 border-orange-600 scale-105 shadow-md rounded-xl font-bold transition-all text-sm`;
                     
                     gameConfig[configKey] = btn.getAttribute('data-val');
                 });
@@ -1220,14 +1314,40 @@
             gameConfig.isMuted = !gameConfig.isMuted;
             if (gameConfig.isMuted) {
                 muteIcon.className = "fa-solid fa-volume-xmark text-lg text-stone-400";
+                AudioEngine.stopBGM();
             } else {
-                muteIcon.className = "fa-solid fa-volume-high text-lg text-orange-600";
+                muteIcon.className = "fa-solid fa-volume-high text-lg text-orange-400";
                 AudioEngine.init();
                 AudioEngine.playSelect();
+                if (gameConfig.gameState === 'playing' || gameConfig.gameState === 'bonus') {
+                    AudioEngine.startBGM();
+                }
             }
         });
 
-        // DRAWER SYSTEM
+        // DRAWER TAB MECHANICS (Correct vs Mistakes)
+        const tabCorrect = document.getElementById('tabCorrect');
+        const tabWrong = document.getElementById('tabWrong');
+        const historyCorrectList = document.getElementById('historyCorrectList');
+        const historyWrongList = document.getElementById('historyWrongList');
+
+        tabCorrect.addEventListener('click', () => {
+            AudioEngine.playSelect();
+            tabCorrect.className = "flex-1 py-3 text-center font-bold text-green-400 border-b-4 border-green-500 bg-stone-900 bg-opacity-40 transition-all";
+            tabWrong.className = "flex-1 py-3 text-center font-bold text-stone-400 border-b-4 border-transparent hover:text-red-400 transition-all";
+            historyCorrectList.classList.remove('hidden');
+            historyWrongList.classList.add('hidden');
+        });
+
+        tabWrong.addEventListener('click', () => {
+            AudioEngine.playSelect();
+            tabWrong.className = "flex-1 py-3 text-center font-bold text-red-500 border-b-4 border-red-500 bg-stone-900 bg-opacity-40 transition-all";
+            tabCorrect.className = "flex-1 py-3 text-center font-bold text-stone-400 border-b-4 border-transparent hover:text-green-400 transition-all";
+            historyWrongList.classList.remove('hidden');
+            historyCorrectList.classList.add('hidden');
+        });
+
+        // DRAWER PANEL CONTROLLERS
         const historyDrawer = document.getElementById('historyDrawer');
         document.getElementById('toggleHistoryBtn').addEventListener('click', () => {
             AudioEngine.init();
@@ -1297,6 +1417,39 @@
             }
         }
 
+        // Confetti Particle System (for level-up celebration)
+        let confetti = [];
+        class Confetti {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                this.vx = (Math.random() - 0.5) * 16;
+                this.vy = (Math.random() - 0.5) * 16 - 12; // explosive jump up
+                this.gravity = 0.3;
+                this.size = Math.random() * 8 + 6;
+                this.alpha = 1.0;
+                this.rotation = Math.random() * Math.PI;
+                this.rotSpeed = (Math.random() - 0.5) * 0.2;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += this.gravity;
+                this.alpha -= 0.012;
+                this.rotation += this.rotSpeed;
+            }
+            draw(ctx) {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.alpha);
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+                ctx.fillStyle = this.color;
+                ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
+                ctx.restore();
+            }
+        }
+
         // Gold Rush basket and drop items
         let fallingItems = [];
         let basketPosition = { x: 0, y: 0, width: 130, height: 40 };
@@ -1358,16 +1511,31 @@
             }
         }
 
-        // SYSTEM SPEECH ENGINE (TEXT-TO-SPEECH)
+        // TEXT-TO-SPEECH SYSTEM
         function speakWord(text) {
             if (gameConfig.isMuted) return;
             window.speechSynthesis.cancel();
+            
+            // Adjust specific words that standard TTS engines often mispronounce
+            // e.g., adding a space between "难" and "难" or "奶" and "奶" prevents dialect blending bugs
+            let spokenText = text.replace(/奶奶/g, "奶 奶");
+            
             const msg = new SpeechSynthesisUtterance();
-            msg.text = text;
+            msg.text = spokenText;
             msg.lang = 'zh-CN';
             
             const voices = window.speechSynthesis.getVoices();
-            const preferredVoice = voices.find(v => v.lang.includes('zh-CN') || v.lang.includes('zh-SG'));
+            // Search for premium standard Mandarin voices first (Tingting, Huihui, Yaoyao, Xiaoxiao, Google)
+            let preferredVoice = voices.find(v => 
+                (v.lang.includes('zh-CN') || v.lang.includes('zh-SG')) && 
+                (v.name.includes('Tingting') || v.name.includes('Huihui') || v.name.includes('Yaoyao') || v.name.includes('Xiaoxiao') || v.name.includes('Google'))
+            );
+            
+            // Fallback to standard Chinese/Singapore voice if premium voices aren't loaded yet
+            if (!preferredVoice) {
+                preferredVoice = voices.find(v => v.lang.includes('zh-CN') || v.lang.includes('zh-SG'));
+            }
+            
             if (preferredVoice) msg.voice = preferredVoice;
             
             window.speechSynthesis.speak(msg);
@@ -1435,22 +1603,35 @@
 
         async function initGame() {
             gameConfig.score = 0;
+            gameConfig.coins = 0; // Reset coins separately from vocabulary score
             gameConfig.gameLevel = 1;
             gameConfig.lastBonusThreshold = 0;
             gameConfig.gameState = 'playing';
             
+            // Clean side drawer records reset
+            gameConfig.masteredWords.clear();
+            gameConfig.mistakeWords.clear();
+            document.getElementById('historyCorrectList').innerHTML = `<p id="emptyHistoryMsg" class="text-stone-500 text-center py-8">目前还没有掌握词汇，开始游戏吞掉它们吧！</p>`;
+            document.getElementById('historyWrongList').innerHTML = `<p id="emptyWrongMsg" class="text-stone-500 text-center py-8">很棒！目前没有错题记录。</p>`;
+            document.getElementById('countCorrect').innerText = "0";
+            document.getElementById('countWrong').innerText = "0";
+            
             document.getElementById('scoreDisplay').innerText = "0";
+            document.getElementById('coinDisplay').innerText = "0";
             document.getElementById('gameLevelDisplay').innerText = "1";
             document.getElementById('setupScreen').classList.add('hidden');
             document.getElementById('gameOverScreen').classList.add('hidden');
             document.getElementById('gameArea').classList.remove('hidden');
+            document.getElementById('coinCard').classList.add('hidden');
+            document.getElementById('levelUpOverlay').classList.add('hidden');
+            document.getElementById('countdownOverlay').classList.add('hidden');
 
             const vocabulary = vocabularyDatabase[gameConfig.selectedLevel]?.[gameConfig.selectedStream] || vocabularyDatabase['P5']['standard'];
             
             activeWords = [];
             
-            // Randomly select 6-8 words from the comprehensive level list to spawn dynamically
-            const spawnCount = Math.min(8, vocabulary.length);
+            // SPAN COUNT CHANGED: Spawning 6 words instead of 12 so that words are not clustered!
+            const spawnCount = Math.min(6, vocabulary.length);
             const chosenIndices = [];
             while (chosenIndices.length < spawnCount) {
                 const randIndex = Math.floor(Math.random() * vocabulary.length);
@@ -1466,7 +1647,7 @@
             pickNewTargetWord();
 
             if (gameConfig.selectedRule === 'timed') {
-                gameConfig.metricVal = 60;
+                gameConfig.metricVal = 90; // CHANGED TIMER: Increased from 60 seconds to 90 seconds
                 document.getElementById('metricLabel').innerText = "时间 TIMER:";
                 document.getElementById('metricDisplay').innerText = gameConfig.metricVal;
                 document.getElementById('metricCard').classList.remove('hidden');
@@ -1492,6 +1673,9 @@
                 }, 1000);
             }
 
+            // Start fun background music loop
+            AudioEngine.startBGM();
+
             if (gameConfig.selectedControl === 'eat') {
                 document.getElementById('cameraLoading').classList.remove('hidden');
                 videoElement.classList.remove('hidden');
@@ -1504,22 +1688,19 @@
         }
 
         function createWordElement(vocabObj) {
+            // FIXED SPEED: Standardized base physics speed scale to a reasonable speed of 5 (with no exponential speed-up)
+            const baseSpeed = 5;
             return {
                 word: vocabObj.word,
                 pinyin: vocabObj.pinyin,
                 translation: vocabObj.translation,
                 x: Math.random() * (canvasElement.width ? canvasElement.width - 200 : window.innerWidth - 300) + 100,
-                y: Math.random() * (canvasElement.height ? canvasElement.height - 200 : window.innerHeight - 400) + 100,
-                vx: (Math.random() - 0.5) * 3,
-                vy: (Math.random() - 0.5) * 3,
-                radius: 45 + vocabObj.word.length * 8,
-                color: getRandomBubbleColor()
+                y: Math.random() * (canvasElement.height ? canvasElement.height - 250 : window.innerHeight - 400) + 200,
+                vx: (Math.random() - 0.5) * baseSpeed,
+                vy: (Math.random() - 0.5) * baseSpeed,
+                // Adjust boundaries slightly for a standard circle footprint
+                radius: 40
             };
-        }
-
-        function getRandomBubbleColor() {
-            const colors = ['#f43f5e', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
-            return colors[Math.floor(Math.random() * colors.length)];
         }
 
         function pickNewTargetWord() {
@@ -1532,7 +1713,9 @@
             document.getElementById('placardCategory').innerText = "根据拼音找出词语 Find by Pinyin:";
 
             setTimeout(() => {
-                speakWord(chosen.word);
+                if (gameConfig.gameState === 'playing') {
+                    speakWord(chosen.word);
+                }
             }, 250);
         }
 
@@ -1558,12 +1741,12 @@
 
             cameraModule = new Camera(videoElement, {
                 onFrame: async () => {
-                    if (gameConfig.gameState === 'playing' || gameConfig.gameState === 'bonus') {
+                    if (gameConfig.gameState === 'playing' || gameConfig.gameState === 'bonus' || gameConfig.gameState === 'countdown') {
                         await faceMeshModule.send({ image: videoElement });
                     }
                 },
-                width: 640,
-                height: 480
+                width: 1280,
+                height: 720
             });
 
             try {
@@ -1585,28 +1768,40 @@
             matchCanvasSizing();
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
+            // Mirror video frame background
+            canvasCtx.save();
+            canvasCtx.scale(-1, 1);
+            canvasCtx.translate(-canvasElement.width, 0);
+            canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+            canvasCtx.restore();
+
             if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
                 const landmarks = results.multiFaceLandmarks[0];
                 const upperInnerLip = landmarks[13];
                 const lowerInnerLip = landmarks[14];
-                const cornerLeft = landmarks[61];
-                const cornerRight = landmarks[291];
-
-                const distanceY = Math.abs(upperInnerLip.y - lowerInnerLip.y);
-                const widthX = Math.abs(cornerLeft.x - cornerRight.x);
                 
+                // Track coordinates elegantly
                 mouthPosition.x = (1 - upperInnerLip.x) * canvasElement.width;
                 mouthPosition.y = upperInnerLip.y * canvasElement.height;
+                mouthPosition.isOpen = Math.abs(upperInnerLip.y - lowerInnerLip.y) > 0.045;
                 
-                const openRatio = distanceY / (widthX || 1);
-                mouthPosition.isOpen = openRatio > 0.18;
-                mouthPosition.diameter = 30 + (openRatio * 150);
+                // RESTORED: Simple classic outer tracking circle cursor (no panda!)
+                canvasCtx.save();
+                canvasCtx.beginPath();
+                canvasCtx.arc(mouthPosition.x, mouthPosition.y, 40, 0, Math.PI * 2);
+                canvasCtx.strokeStyle = mouthPosition.isOpen ? "#00ff88" : "white";
+                canvasCtx.lineWidth = 5;
+                canvasCtx.stroke();
+                canvasCtx.restore();
             }
 
-            if (gameConfig.gameState === 'playing') {
+            // Render loop branch
+            if (gameConfig.gameState === 'playing' || gameConfig.gameState === 'transition_pause') {
                 runVocabMainLoop();
             } else if (gameConfig.gameState === 'bonus') {
                 runGoldRushMiniGameLoop();
+            } else if (gameConfig.gameState === 'countdown') {
+                runCountdownOnlyLoop();
             }
         }
 
@@ -1614,13 +1809,28 @@
             matchCanvasSizing();
             
             function tick() {
-                if (gameConfig.gameState === 'playing') {
+                if (gameConfig.gameState === 'playing' || gameConfig.gameState === 'transition_pause') {
                     canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+                    
+                    // Draw clean solid background for tap mode inside canvas
+                    canvasCtx.fillStyle = '#0f172a';
+                    canvasCtx.fillRect(0, 0, canvasElement.width, canvasElement.height);
+                    
                     runVocabMainLoop();
                     animationFrameId = requestAnimationFrame(tick);
                 } else if (gameConfig.gameState === 'bonus') {
                     canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+                    
+                    canvasCtx.fillStyle = '#0f172a';
+                    canvasCtx.fillRect(0, 0, canvasElement.width, canvasElement.height);
+                    
                     runGoldRushMiniGameLoop();
+                    animationFrameId = requestAnimationFrame(tick);
+                } else if (gameConfig.gameState === 'countdown') {
+                    canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+                    canvasCtx.fillStyle = '#0f172a';
+                    canvasCtx.fillRect(0, 0, canvasElement.width, canvasElement.height);
+                    runCountdownOnlyLoop();
                     animationFrameId = requestAnimationFrame(tick);
                 }
             }
@@ -1643,121 +1853,90 @@
 
         // MAIN VOCABULARY GAMEPLAY RENDER TICK
         function runVocabMainLoop() {
-            let trackerX = 0, trackerY = 0, isInteracting = false, chompRadius = 25;
+            let trackerX = 0, trackerY = 0, isInteracting = false;
 
             if (gameConfig.selectedControl === 'eat') {
                 trackerX = mouthPosition.x;
                 trackerY = mouthPosition.y;
                 isInteracting = mouthPosition.isOpen;
-                chompRadius = mouthPosition.diameter;
             } else {
                 trackerX = pointerPos.x;
                 trackerY = pointerPos.y;
                 isInteracting = pointerPos.clicked;
-                chompRadius = 35;
+
+                // Classic targeting reticle overlay for Tap Mode
+                canvasCtx.save();
+                canvasCtx.strokeStyle = isInteracting ? '#00ff88' : 'white';
+                canvasCtx.lineWidth = 4;
+                canvasCtx.beginPath();
+                canvasCtx.arc(trackerX, trackerY, 35, 0, Math.PI * 2);
+                canvasCtx.stroke();
+                canvasCtx.restore();
             }
 
             activeWords.forEach(wordObj => {
-                const multiplier = 1 + (gameConfig.gameLevel - 1) * 0.35;
-                wordObj.x += wordObj.vx * multiplier;
-                wordObj.y += wordObj.vy * multiplier;
-
-                if (wordObj.x - wordObj.radius < 0) {
-                    wordObj.x = wordObj.radius;
-                    wordObj.vx *= -1;
-                }
-                if (wordObj.x + wordObj.radius > canvasElement.width) {
-                    wordObj.x = canvasElement.width - wordObj.radius;
-                    wordObj.vx *= -1;
-                }
-                if (wordObj.y - wordObj.radius < 0) {
-                    wordObj.y = wordObj.radius;
-                    wordObj.vy *= -1;
-                }
-                if (wordObj.y + wordObj.radius > canvasElement.height) {
-                    wordObj.y = canvasElement.height - wordObj.radius;
-                    wordObj.vy *= -1;
+                // High-speed physics updates (FIXED: speed scale remains reasonable constant value of 5)
+                if (gameConfig.gameState !== 'transition_pause') {
+                    wordObj.x += wordObj.vx;
+                    wordObj.y += wordObj.vy;
                 }
 
+                // FIXED BOUNDARY physics constraints: Bounces at Y = 220 so they NEVER drift behind placard prompts!
+                if (wordObj.x < 50) { wordObj.x = 50; wordObj.vx *= -1; }
+                if (wordObj.x > canvasElement.width - 120) { wordObj.x = canvasElement.width - 120; wordObj.vx *= -1; }
+                if (wordObj.y < 220) { wordObj.y = 220; wordObj.vy *= -1; }
+                if (wordObj.y > canvasElement.height - 50) { wordObj.y = canvasElement.height - 50; wordObj.vy *= -1; }
+
+                // RESTORED: Drawing clean Chinese characters directly on canvas with zero bulky bubble shapes
                 canvasCtx.save();
-                canvasCtx.shadowBlur = 12;
-                canvasCtx.shadowColor = 'rgba(0, 0, 0, 0.4)';
-                
-                canvasCtx.beginPath();
-                canvasCtx.arc(wordObj.x, wordObj.y, wordObj.radius, 0, Math.PI * 2);
-                canvasCtx.fillStyle = wordObj.color;
-                canvasCtx.fill();
-                
-                canvasCtx.lineWidth = 4;
-                canvasCtx.strokeStyle = "#ffffff";
-                canvasCtx.stroke();
+                canvasCtx.font = 'bold 45px sans-serif';
+                canvasCtx.shadowColor = "black";
+                canvasCtx.shadowBlur = 10;
+                canvasCtx.fillStyle = gameConfig.gameState === 'transition_pause' ? "rgba(255,255,255,0.4)" : "white"; // dim out slightly during freeze pause
+                canvasCtx.fillText(wordObj.word, wordObj.x, wordObj.y);
                 canvasCtx.restore();
 
-                // Display written Chinese characters in bubbles
-                canvasCtx.fillStyle = '#ffffff';
-                canvasCtx.font = `bold ${32 + (wordObj.word.length > 3 ? -6 : 0)}px sans-serif`;
-                canvasCtx.textAlign = 'center';
-                canvasCtx.textBaseline = 'middle';
-                canvasCtx.fillText(wordObj.word, wordObj.x, wordObj.y);
-
-                const dx = trackerX - wordObj.x;
-                const dy = trackerY - wordObj.y;
+                // COLLISION MECHANIC
+                // Adjust collision coordinate offsets to perfectly align with text baseline
+                const dx = trackerX - (wordObj.x + 30);
+                const dy = trackerY - (wordObj.y - 20);
                 const dist = Math.sqrt(dx*dx + dy*dy);
 
-                if (dist < wordObj.radius + chompRadius && isInteracting) {
+                // COLLISION GUARDED: Bypassed during brief transition_pause state!
+                if (gameConfig.gameState === 'playing' && dist < 70 && isInteracting) {
                     evaluateInteractiveChomp(wordObj, trackerX, trackerY);
                 }
             });
 
-            canvasCtx.save();
-            if (gameConfig.selectedControl === 'eat') {
-                canvasCtx.translate(trackerX, trackerY);
-                
-                canvasCtx.fillStyle = '#1e1b4b';
-                canvasCtx.beginPath();
-                canvasCtx.arc(-24, -20, 14, 0, Math.PI * 2);
-                canvasCtx.arc(24, -20, 14, 0, Math.PI * 2);
-                canvasCtx.fill();
+            particles.forEach((p, idx) => {
+                p.update();
+                p.draw(canvasCtx);
+                if (p.alpha <= 0) particles.splice(idx, 1);
+            });
+        }
 
-                canvasCtx.fillStyle = '#ffffff';
-                canvasCtx.beginPath();
-                canvasCtx.arc(0, 0, 28, 0, Math.PI * 2);
-                canvasCtx.fill();
-                canvasCtx.lineWidth = 3;
-                canvasCtx.strokeStyle = '#4a3728';
-                canvasCtx.stroke();
+        // COUNTDOWN STATE ONLY LOOP
+        function runCountdownOnlyLoop() {
+            // Words continue to glide around smoothly in the background, but are completely NOT interactive
+            activeWords.forEach(wordObj => {
+                wordObj.x += wordObj.vx;
+                wordObj.y += wordObj.vy;
 
-                canvasCtx.fillStyle = '#1e1b4b';
-                canvasCtx.beginPath();
-                canvasCtx.arc(-11, -5, 7, 0, Math.PI * 2);
-                canvasCtx.arc(11, -5, 7, 0, Math.PI * 2);
-                canvasCtx.fill();
-                canvasCtx.fillStyle = '#ffffff';
-                canvasCtx.beginPath();
-                canvasCtx.arc(-9, -7, 3, 0, Math.PI * 2);
-                canvasCtx.arc(9, -7, 3, 0, Math.PI * 2);
-                canvasCtx.fill();
+                if (wordObj.x < 50) { wordObj.x = 50; wordObj.vx *= -1; }
+                if (wordObj.x > canvasElement.width - 120) { wordObj.x = canvasElement.width - 120; wordObj.vx *= -1; }
+                if (wordObj.y < 220) { wordObj.y = 220; wordObj.vy *= -1; }
+                if (wordObj.y > canvasElement.height - 50) { wordObj.y = canvasElement.height - 50; wordObj.vy *= -1; }
 
-                canvasCtx.fillStyle = isInteracting ? '#ef4444' : '#1e1b4b';
-                canvasCtx.beginPath();
-                if (isInteracting) {
-                    canvasCtx.arc(0, 12, chompRadius * 0.4, 0, Math.PI * 2);
-                } else {
-                    canvasCtx.arc(0, 12, 5, 0, Math.PI * 2);
-                }
-                canvasCtx.fill();
-            } else {
-                canvasCtx.strokeStyle = isInteracting ? '#ef4444' : '#3b82f6';
-                canvasCtx.lineWidth = 4;
-                canvasCtx.beginPath();
-                canvasCtx.arc(trackerX, trackerY, chompRadius, 0, Math.PI * 2);
-                canvasCtx.stroke();
-                
-                canvasCtx.fillStyle = isInteracting ? 'rgba(239, 68, 68, 0.25)' : 'rgba(59, 130, 246, 0.2)';
-                canvasCtx.fill();
-            }
-            canvasCtx.restore();
+                canvasCtx.save();
+                canvasCtx.font = 'bold 45px sans-serif';
+                canvasCtx.shadowColor = "black";
+                canvasCtx.shadowBlur = 10;
+                canvasCtx.fillStyle = "rgba(255, 255, 255, 0.4)"; // dim down inactive words
+                canvasCtx.fillText(wordObj.word, wordObj.x, wordObj.y);
+                canvasCtx.restore();
+            });
 
+            // Clean particles updater
             particles.forEach((p, idx) => {
                 p.update();
                 p.draw(canvasCtx);
@@ -1769,8 +1948,15 @@
             const popup = document.getElementById('feedbackPopup');
             
             if (wordObj.word === targetWordObj.word) {
+                // ADD POINTS strictly to Vocabulary progression score!
                 gameConfig.score += 10;
-                AudioEngine.playHit();
+                
+                // CHANGED: Vocal and sound feedbacks separation based on mode
+                if (gameConfig.selectedControl === 'eat') {
+                    playChompVoice(true); // Says just "好吃！" (Simplified)
+                } else {
+                    AudioEngine.playHit(); // Retro retro chime
+                }
                 
                 registerMasteredWord(wordObj);
 
@@ -1781,47 +1967,67 @@
                 popup.innerText = "YUMMY! 😋 正确";
                 popup.className = "absolute text-5xl font-extrabold text-green-500 scale-125 z-30 pointer-events-none drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]";
                 
-                const vocabulary = vocabularyDatabase[gameConfig.selectedLevel]?.[gameConfig.selectedStream] || vocabularyDatabase['P5']['standard'];
-                
-                const activeWordStrings = activeWords.map(w => w.word);
-                let freshWord = vocabulary[Math.floor(Math.random() * vocabulary.length)];
-                
-                let attempts = 0;
-                while (activeWordStrings.includes(freshWord.word) && attempts < 30) {
-                    freshWord = vocabulary[Math.floor(Math.random() * vocabulary.length)];
-                    attempts++;
-                }
-                
-                wordObj.word = freshWord.word;
-                wordObj.pinyin = freshWord.pinyin;
-                wordObj.translation = freshWord.translation;
-                wordObj.x = Math.random() * (canvasElement.width - 200) + 100;
-                wordObj.y = Math.random() * (canvasElement.height - 200) + 100;
-                wordObj.color = getRandomBubbleColor();
+                // INTRODUCED TRANSITION PAUSE: Game freezes briefly (1.2 seconds) to let child close their mouth
+                // (During this, the game rule timer interval does not decrement because gameState !== 'playing')
+                gameConfig.gameState = 'transition_pause';
 
-                if (gameConfig.selectedRule === 'points') {
-                    document.getElementById('metricDisplay').innerText = `${gameConfig.score}/150`;
-                    if (gameConfig.score >= 150) {
-                        endGame();
-                        return;
+                setTimeout(() => {
+                    const vocabulary = vocabularyDatabase[gameConfig.selectedLevel]?.[gameConfig.selectedStream] || vocabularyDatabase['P5']['standard'];
+                    
+                    const activeWordStrings = activeWords.map(w => w.word);
+                    let freshWord = vocabulary[Math.floor(Math.random() * vocabulary.length)];
+                    
+                    let attempts = 0;
+                    while (activeWordStrings.includes(freshWord.word) && attempts < 35) {
+                        freshWord = vocabulary[Math.floor(Math.random() * vocabulary.length)];
+                        attempts++;
                     }
-                }
+                    
+                    wordObj.word = freshWord.word;
+                    wordObj.pinyin = freshWord.pinyin;
+                    wordObj.translation = freshWord.translation;
+                    wordObj.x = Math.random() * (canvasElement.width - 200) + 100;
+                    wordObj.y = Math.random() * (canvasElement.height - 250) + 200;
+                    
+                    // Fixed Speed scale of 5 remains constant
+                    const baseSpeed = 5;
+                    wordObj.vx = (Math.random() - 0.5) * baseSpeed;
+                    wordObj.vy = (Math.random() - 0.5) * baseSpeed;
 
-                gameConfig.gameLevel = Math.floor(gameConfig.score / 50) + 1;
-                document.getElementById('gameLevelDisplay').innerText = gameConfig.gameLevel;
+                    if (gameConfig.selectedRule === 'points') {
+                        document.getElementById('metricDisplay').innerText = `${gameConfig.score}/150`;
+                        if (gameConfig.score >= 150) {
+                            endGame();
+                            return;
+                        }
+                    }
 
-                const currentLevelThreshold = Math.floor(gameConfig.score / 50) * 50;
-                if (currentLevelThreshold > gameConfig.lastBonusThreshold && currentLevelThreshold > 0) {
-                    gameConfig.lastBonusThreshold = currentLevelThreshold;
-                    triggerPandaGoldRushBonus();
-                } else {
-                    pickNewTargetWord();
-                }
+                    const prevLevel = gameConfig.gameLevel;
+                    gameConfig.gameLevel = Math.floor(gameConfig.score / 50) + 1;
+                    document.getElementById('gameLevelDisplay').innerText = gameConfig.gameLevel;
+
+                    // LEVEL-UP CELEBRATION! Check level transition
+                    if (gameConfig.gameLevel > prevLevel) {
+                        triggerLevelUpCelebrationAndBonus();
+                    } else {
+                        gameConfig.gameState = 'playing';
+                        pickNewTargetWord();
+                    }
+                }, 1200); // 1.2s brief paused transition breather
 
             } else {
                 gameConfig.score = Math.max(0, gameConfig.score - 5);
-                AudioEngine.playMiss();
                 
+                // CHANGED: Vocal and synth feedbacks on incorrect
+                if (gameConfig.selectedControl === 'eat') {
+                    playChompVoice(false); // Says just "难吃！" (Simplified)
+                } else {
+                    AudioEngine.playMiss(); // Flat retro synth
+                }
+                
+                // Track mistakes uniquely to sidebar mistakes panel
+                registerMistakeWord(targetWordObj);
+
                 popup.innerText = "YUCKY! 🤢 错误";
                 popup.className = "absolute text-5xl font-extrabold text-red-500 scale-125 z-30 pointer-events-none drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]";
 
@@ -1845,6 +2051,53 @@
             mouthPosition.isOpen = false;
         }
 
+        // CELEBRATION FLOW: Trigger glowing star overlay with explosion confetti
+        function triggerLevelUpCelebrationAndBonus() {
+            gameConfig.gameState = 'celebration';
+            
+            // Populate celebration metadata text
+            document.getElementById('celebLevelText').innerText = gameConfig.gameLevel;
+            
+            const overlay = document.getElementById('levelUpOverlay');
+            overlay.classList.remove('hidden');
+            overlay.style.display = "flex";
+
+            // Spawn explosive bursts of beautiful digital confetti particles
+            confetti = [];
+            for (let i = 0; i < 110; i++) {
+                confetti.push(new Confetti(window.innerWidth / 2, window.innerHeight / 2 + 50));
+            }
+
+            // Play rewarding fanfare scale chords
+            AudioEngine.playLevelUp();
+
+            // Run celebration loops inside canvas
+            function runCelebConfettiLoop() {
+                if (gameConfig.gameState !== 'celebration') return;
+                
+                canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+                
+                // Confetti updating
+                confetti.forEach((c, idx) => {
+                    c.update();
+                    c.draw(canvasCtx);
+                    if (c.alpha <= 0) confetti.splice(idx, 1);
+                });
+
+                requestAnimationFrame(runCelebConfettiLoop);
+            }
+            runCelebConfettiLoop();
+
+            // Retain congratulatory banner temporarily for 2.5 seconds, then launch Gold Rush mini-game
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                overlay.style.display = "none";
+                
+                // Regular milestone gold rush bonus level triggered automatically
+                triggerPandaGoldRushBonus();
+            }, 2500);
+        }
+
         // LEVEL UP: "PANDA GOLD RUSH" MINI PRIZE GAME
         let bonusSecondsLeft = 15;
         let bonusTimerInterval = null;
@@ -1854,15 +2107,15 @@
             bonusSecondsLeft = 15;
             fallingItems = [];
 
-            AudioEngine.playLevelUp();
-            speakWord("彩蛋时间！熊猫接金币！");
-
             document.getElementById('targetWordText').innerText = "🐼 熊猫接金币！";
             document.getElementById('targetWordTranslation').innerText = "左右滑动接金币，千万躲避炸弹！";
             document.getElementById('placardCategory').innerText = "🎁 奖励关卡 BONUS STAGE:";
 
             document.getElementById('metricLabel').innerText = "时间 BONUS:";
             document.getElementById('metricDisplay').innerText = bonusSecondsLeft;
+            
+            // Show separated Coins element during Gold Rush
+            document.getElementById('coinCard').classList.remove('hidden');
 
             clearInterval(timerInterval);
 
@@ -1872,7 +2125,7 @@
                 
                 if (bonusSecondsLeft <= 0) {
                     clearInterval(bonusTimerInterval);
-                    returnToVocabularyPractice();
+                    initiatePostGameSafetyCountdown();
                 }
             }, 1000);
         }
@@ -1912,7 +2165,8 @@
                         fallingItems.splice(i, 1);
                         
                         if (item.isBomb) {
-                            gameConfig.score = Math.max(0, gameConfig.score - 15);
+                            // Deduct strictly from coins, avoiding points progression deflation!
+                            gameConfig.coins = Math.max(0, gameConfig.coins - 2);
                             AudioEngine.playExplosion();
                             triggerScreenShake();
                             
@@ -1920,14 +2174,15 @@
                                 particles.push(new Particle(item.x, item.y, "🔥", "#f97316"));
                             }
                         } else {
-                            gameConfig.score += 10;
+                            // Accumulate coins separately from points (preventing progression exploits)
+                            gameConfig.coins += 1;
                             AudioEngine.playCoin();
                             
                             for (let p = 0; p < 6; p++) {
                                 particles.push(new Particle(item.x, item.y, "✨", "#eab308"));
                             }
                         }
-                        document.getElementById('scoreDisplay').innerText = gameConfig.score;
+                        document.getElementById('coinDisplay').innerText = gameConfig.coins;
                         continue;
                     }
                 }
@@ -2000,11 +2255,44 @@
             });
         }
 
+        // Post Mini-Game safety buffer countdown to prevent accidental wrong touches
+        function initiatePostGameSafetyCountdown() {
+            gameConfig.gameState = 'countdown';
+            document.getElementById('coinCard').classList.add('hidden');
+            
+            const overlay = document.getElementById('countdownOverlay');
+            overlay.classList.remove('hidden');
+            overlay.style.display = "flex";
+
+            let countdownSeconds = 3;
+            const textElement = document.getElementById('countdownNumber');
+            textElement.innerText = countdownSeconds;
+            
+            // Beep audio indicator
+            AudioEngine.playCountdownBeep(true);
+
+            const interval = setInterval(() => {
+                countdownSeconds--;
+                if (countdownSeconds > 0) {
+                    textElement.innerText = countdownSeconds;
+                    AudioEngine.playCountdownBeep(true);
+                } else if (countdownSeconds === 0) {
+                    textElement.innerText = "GO!";
+                    AudioEngine.playCountdownBeep(false);
+                } else {
+                    clearInterval(interval);
+                    overlay.classList.add('hidden');
+                    overlay.style.display = "none";
+                    returnToVocabularyPractice();
+                }
+            }, 1000);
+        }
+
         function returnToVocabularyPractice() {
             gameConfig.gameState = 'playing';
             
             if (gameConfig.selectedRule === 'timed') {
-                gameConfig.metricVal = 30; 
+                gameConfig.metricVal = 30; // extension breather timer
                 document.getElementById('metricLabel').innerText = "时间 TIMER:";
                 document.getElementById('metricDisplay').innerText = gameConfig.metricVal;
                 
@@ -2022,7 +2310,7 @@
 
             pickNewTargetWord();
             if (gameConfig.selectedControl !== 'eat') {
-                start2DAnimationLoop(); 
+                start2DAnimationLoop(); // Restart loop
             }
         }
 
@@ -2031,8 +2319,9 @@
             if (gameConfig.masteredWords.has(wordObj.word)) return;
             
             gameConfig.masteredWords.add(wordObj.word);
+            document.getElementById('countCorrect').innerText = gameConfig.masteredWords.size;
             
-            const historyList = document.getElementById('historyList');
+            const historyList = document.getElementById('historyCorrectList');
             const emptyHistoryMsg = document.getElementById('emptyHistoryMsg');
             
             if (emptyHistoryMsg) {
@@ -2040,18 +2329,47 @@
             }
 
             const item = document.createElement('div');
-            item.className = "bg-white p-3 rounded-xl border-2 border-orange-200 shadow-sm flex items-center justify-between bounce-hover transition-all";
+            item.className = "bg-stone-900 p-3 rounded-xl border-2 border-green-500 shadow-sm flex items-center justify-between bounce-hover transition-all text-white";
             item.innerHTML = `
                 <div>
-                    <h4 class="text-xl font-bold text-stone-800">${wordObj.word}</h4>
-                    <p class="text-xs text-stone-500">${wordObj.pinyin}</p>
-                    <p class="text-sm text-stone-600 font-semibold">${wordObj.translation}</p>
+                    <h4 class="text-xl font-bold text-green-400">${wordObj.word}</h4>
+                    <p class="text-xs text-stone-400">${wordObj.pinyin}</p>
+                    <p class="text-sm text-stone-300 font-semibold">${wordObj.translation}</p>
                 </div>
-                <button onclick="speakWord('${wordObj.word}')" class="text-orange-500 hover:text-orange-600 text-lg w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center border border-orange-100 shadow-inner">
+                <button onclick="speakWord('${wordObj.word}')" class="text-green-400 hover:text-green-300 text-lg w-10 h-10 rounded-full bg-stone-800 flex items-center justify-center border border-green-500 shadow-inner">
                     <i class="fa-solid fa-volume-high"></i>
                 </button>
             `;
             historyList.appendChild(item);
+        }
+
+        // ADD INCORRECT ATTEMPTS TO MISTAKES DRAWER
+        function registerMistakeWord(wordObj) {
+            if (gameConfig.mistakeWords.has(wordObj.word)) return;
+
+            gameConfig.mistakeWords.add(wordObj.word);
+            document.getElementById('countWrong').innerText = gameConfig.mistakeWords.size;
+
+            const wrongList = document.getElementById('historyWrongList');
+            const emptyWrongMsg = document.getElementById('emptyWrongMsg');
+
+            if (emptyWrongMsg) {
+                emptyWrongMsg.remove();
+            }
+
+            const item = document.createElement('div');
+            item.className = "bg-stone-900 p-3 rounded-xl border-2 border-red-500 shadow-sm flex items-center justify-between bounce-hover transition-all text-white";
+            item.innerHTML = `
+                <div>
+                    <h4 class="text-xl font-bold text-red-400">${wordObj.word}</h4>
+                    <p class="text-xs text-stone-400">${wordObj.pinyin}</p>
+                    <p class="text-sm text-stone-300 font-semibold">${wordObj.translation}</p>
+                </div>
+                <button onclick="speakWord('${wordObj.word}')" class="text-red-400 hover:text-red-300 text-lg w-10 h-10 rounded-full bg-stone-800 flex items-center justify-center border border-red-500 shadow-inner">
+                    <i class="fa-solid fa-volume-high"></i>
+                </button>
+            `;
+            wrongList.appendChild(item);
         }
 
         // FINAL GAME OVER SCREEN
@@ -2062,6 +2380,7 @@
             document.getElementById('gameOverScreen').classList.remove('hidden');
             
             document.getElementById('endScore').innerText = gameConfig.score;
+            document.getElementById('endCoins').innerText = gameConfig.coins;
             document.getElementById('endMasteredCount').innerText = gameConfig.masteredWords.size;
 
             if (gameConfig.score >= 120) {
@@ -2081,6 +2400,7 @@
             clearInterval(timerInterval);
             clearInterval(bonusTimerInterval);
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            AudioEngine.stopBGM();
         }
     </script>
 </body>

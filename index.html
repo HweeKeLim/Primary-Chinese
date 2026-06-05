@@ -1244,7 +1244,8 @@ const gameConfig = {
     showPinyinHints: false, faceIsDetected: false,
     currentStreak: 0, bestStreak: 0,
     bonusTriggered: false,  // first bonus fires at 100pts
-    lastBonusLevel: 0       // level at which last bonus fired; subsequent bonuses every +10 levels
+    lastBonusLevel: 0,      // level at which last bonus fired; subsequent bonuses every +10 levels
+    vocabPool: []           // full vocab pool for current session
 };
 
 // ============================================================
@@ -1549,8 +1550,79 @@ function isDesktop() {
     return window.innerWidth >= 768 && !('ontouchstart' in window);
 }
 
+// ============================================================
+// VOCAB POOL BUILDER
+// higher = standard + higher merged (deduped)
+// P4/P5/P6 higher pulls in harder words from previous levels
+// ============================================================
+function getVocabPool(level, stream) {
+    const db = vocabularyDatabase;
+    function merge(...arrays) {
+        const seen = new Set();
+        const result = [];
+        for (const arr of arrays) {
+            for (const entry of arr) {
+                if (!seen.has(entry.word)) { seen.add(entry.word); result.push(entry); }
+            }
+        }
+        return result;
+    }
+    const std  = lvl => db[lvl]?.standard || [];
+    const high = lvl => db[lvl]?.higher   || [];
 
-document.getElementById('startGameBtn').addEventListener('click', async () => { AudioEngine.init(); AudioEngine.playSelect(); initGame(); });
+    if (stream === 'standard') return std(level);
+
+    switch (level) {
+        case 'P1': return merge(std('P1'), high('P1'));
+        case 'P2': return merge(std('P2'), high('P2'));
+        case 'P3': return merge(std('P3'), high('P3'));
+        case 'P4': return merge(std('P4'), high('P4'), high('P3'));
+        case 'P5': return merge(std('P5'), high('P5'), high('P4'), high('P3'));
+        case 'P6': return merge(std('P6'), high('P6'), high('P5'), high('P4'), high('P3'));
+        default:   return merge(std(level), high(level));
+    }
+}
+
+// ============================================================
+// WORD QUEUE SYSTEM
+// unseenPool  — words not yet correctly answered, shuffled
+// mistakeQueue — words answered wrongly, re-tested before new words
+// ============================================================
+let unseenPool   = [];
+let mistakeQueue = [];
+
+function shuffleArray(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
+function initWordQueue(vocab) {
+    unseenPool   = shuffleArray(vocab);
+    mistakeQueue = [];
+}
+
+// Returns next word to replace a slot, avoiding words already on screen.
+// Returns null when all words have been correctly answered.
+function nextWordFromQueue(excludeWords) {
+    const exclude = new Set(excludeWords);
+    for (let i = 0; i < mistakeQueue.length; i++) {
+        if (!exclude.has(mistakeQueue[i].word)) return mistakeQueue.splice(i, 1)[0];
+    }
+    for (let i = 0; i < unseenPool.length; i++) {
+        if (!exclude.has(unseenPool[i].word)) return unseenPool.splice(i, 1)[0];
+    }
+    return null; // all mastered
+}
+
+function requeueMistake(vocabObj) {
+    if (!mistakeQueue.find(w => w.word === vocabObj.word)) mistakeQueue.push(vocabObj);
+}
+
+
 document.getElementById('replayBtn').addEventListener('click', () => { AudioEngine.playSelect(); initGame(); });
 document.getElementById('toMenuBtn').addEventListener('click', () => {
     AudioEngine.playSelect(); stopGameAndTracking();
@@ -1588,15 +1660,20 @@ async function initGame() {
     document.getElementById('countdownOverlay').classList.add('hidden');
     pauseOverlay.classList.add('hidden');
 
-    const vocab = vocabularyDatabase[gameConfig.selectedLevel]?.[gameConfig.selectedStream] || vocabularyDatabase['P5']['standard'];
+    const vocab = getVocabPool(gameConfig.selectedLevel, gameConfig.selectedStream);
+    gameConfig.vocabPool = vocab;   // keep reference for word-swap
+    initWordQueue(vocab);
+
     activeWords=[];
     const spawnCount = Math.min(isDesktop() ? 9 : 6, vocab.length);
-    const chosen=[];
-    while (chosen.length<spawnCount) {
-        const r=Math.floor(Math.random()*vocab.length);
-        if (!chosen.includes(r)) chosen.push(r);
+    // Pull initial words from the queue
+    const initialWords = [];
+    while (initialWords.length < spawnCount && (unseenPool.length > 0 || mistakeQueue.length > 0)) {
+        const w = nextWordFromQueue(initialWords.map(x => x.word));
+        if (!w) break;
+        initialWords.push(w);
     }
-    chosen.forEach(idx => activeWords.push(createWordElement(vocab[idx])));
+    initialWords.forEach(v => activeWords.push(createWordElement(v)));
     pickNewTargetWord();
 
     if (gameConfig.selectedRule==='timed') {
@@ -1862,12 +1939,32 @@ function evaluateChomp(wordObj, x, y) {
         if (gameConfig.selectedRule==='timed') pauseVocabTimer(); // don't burn time during word-swap
 
         setTimeout(() => {
-            const vocab=vocabularyDatabase[gameConfig.selectedLevel]?.[gameConfig.selectedStream]||vocabularyDatabase['P5']['standard'];
-            const activeStrs=activeWords.map(w=>w.word);
-            let fresh=vocab[Math.floor(Math.random()*vocab.length)];
-            let attempts=0;
-            while (activeStrs.includes(fresh.word)&&attempts<35) { fresh=vocab[Math.floor(Math.random()*vocab.length)]; attempts++; }
-            wordObj.word=fresh.word; wordObj.pinyin=fresh.pinyin; wordObj.translation=fresh.translation;
+            // Get next word from queue (mistakes first, then unseen)
+            const activeStrs = activeWords.map(w => w.word);
+            const fresh = nextWordFromQueue(activeStrs);
+
+            if (!fresh) {
+                // All words correctly answered — end game for unlimited, else continue normally
+                if (gameConfig.selectedRule === 'unlimited') {
+                    gameConfig.gameState = 'playing'; // allow normal end flow
+                    endGame(true); // pass flag for "all mastered"
+                    return;
+                }
+                // For timed/points: reshuffle only mistake words, or if none, reshuffle full pool
+                if (mistakeQueue.length === 0) {
+                    unseenPool = shuffleArray(gameConfig.vocabPool.filter(
+                        v => !gameConfig.mistakeWords.has(v.word) // exclude never-wrong words too? No — reshuffle all for continued play
+                    ));
+                    unseenPool = shuffleArray(gameConfig.vocabPool);
+                }
+                const fallback = nextWordFromQueue(activeStrs);
+                if (fallback) {
+                    wordObj.word=fallback.word; wordObj.pinyin=fallback.pinyin; wordObj.translation=fallback.translation;
+                } // else leave word as-is (tiny pool edge case)
+            } else {
+                wordObj.word=fresh.word; wordObj.pinyin=fresh.pinyin; wordObj.translation=fresh.translation;
+            }
+
             wordObj.x=Math.random()*(canvasElement.width-250)+100;
             wordObj.y=Math.random()*(canvasElement.height-300)+250;
             wordObj.vx=(Math.random()-0.5)*(isDesktop()?3:2); wordObj.vy=(Math.random()-0.5)*(isDesktop()?3:2);
@@ -1907,6 +2004,7 @@ function evaluateChomp(wordObj, x, y) {
         if (gameConfig.selectedControl==='eat') playChompVoice(false);
         else AudioEngine.playMiss();
         registerMistakeWord(targetWordObj);
+        requeueMistake(targetWordObj); // re-insert into queue to be tested again
 
         popup.innerText="YUCKY! 🤢 错误";
         popup.className="absolute text-4xl font-extrabold text-red-500 scale-125 z-30 pointer-events-none drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]";
@@ -2119,7 +2217,7 @@ function registerMistakeWord(wordObj) {
 // ============================================================
 // END GAME
 // ============================================================
-function endGame() {
+function endGame(allMastered = false) {
     stopGameAndTracking();
     document.getElementById('gameArea').classList.add('hidden');
     document.getElementById('gameOverScreen').classList.remove('hidden');
@@ -2135,15 +2233,20 @@ function endGame() {
         streakInfo.classList.add('hidden');
     }
 
-    if (gameConfig.score>=120) {
+    const totalWords = gameConfig.vocabPool ? gameConfig.vocabPool.length : 0;
+
+    if (allMastered) {
+        document.getElementById('endTitle').innerText="🎓 全部掌握！All Mastered!";
+        document.getElementById('endSubtitle').innerText=`太厉害了！你完美掌握了全部 ${totalWords} 个词汇！\nYou correctly answered all ${totalWords} words!`;
+    } else if (gameConfig.score>=120) {
         document.getElementById('endTitle').innerText="👑 华文特级大师！";
-        document.getElementById('endSubtitle').innerText="你完全征服了所有的测试词汇！";
+        document.getElementById('endSubtitle').innerText=`掌握了 ${gameConfig.masteredWords.size} / ${totalWords} 个词汇！`;
     } else if (gameConfig.score>=60) {
         document.getElementById('endTitle').innerText="🏆 精彩极了！";
-        document.getElementById('endSubtitle').innerText="你完成了一场极佳的华文挑战。";
+        document.getElementById('endSubtitle').innerText=`掌握了 ${gameConfig.masteredWords.size} / ${totalWords} 个词汇！`;
     } else {
         document.getElementById('endTitle').innerText="💪 继续加油！";
-        document.getElementById('endSubtitle').innerText="多练习几次，你一定能掌握更多词汇！";
+        document.getElementById('endSubtitle').innerText=`掌握了 ${gameConfig.masteredWords.size} / ${totalWords} 个词汇，多练习几次！`;
     }
 }
 

@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>华文欢乐大闯关 - Chinese Word Arcade Deluxe</title>
-    <!-- Tailwind CSS for modern layout styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome for playful game icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- MediaPipe Face Mesh & Camera Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
     <style>
@@ -66,7 +63,6 @@
 </head>
 <body class="w-screen h-screen overflow-hidden flex flex-col justify-between text-white">
 
-    <!-- TOP NAVIGATION HEADER -->
     <header class="w-full bg-stone-900 border-b-4 border-amber-950 p-4 flex justify-between items-center z-30 shadow-md">
         <div class="flex items-center space-x-3">
             <span class="text-4xl">🐼</span>
@@ -86,16 +82,13 @@
         </div>
     </header>
 
-    <!-- CORE INTERACTIVE BOX -->
     <main id="mainContainer" class="relative flex-1 w-full max-w-7xl mx-auto p-4 flex flex-col items-center justify-center">
         
-        <!-- SETUP CONFIGURATION BOARD -->
         <section id="setupScreen" class="w-full max-w-4xl setup-card rounded-3xl p-6 md:p-8 flex flex-col items-center space-y-6 z-20 overflow-y-auto max-h-[80vh]">
             <h2 class="text-3xl md:text-4xl text-orange-400 font-extrabold text-center tracking-wide" style="font-family: 'ZCOOL KuaiLe', sans-serif;">🏆 全级华文大闯关：选择你的关卡</h2>
             <p class="text-stone-400 text-center text-sm md:text-base">Comprehensive P1 to P6 Chinese Syllabus with Cumulative Recaps (Over 700 Words!)</p>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-                <!-- Level and Stream Selection Group -->
                 <div class="space-y-4 bg-stone-900 bg-opacity-60 p-5 rounded-2xl border border-stone-800">
                     <h3 class="text-lg font-bold text-orange-400"><i class="fa-solid fa-graduation-cap mr-2"></i>1. 课程与年级 Class Setup</h3>
                     
@@ -120,7 +113,6 @@
                     </div>
                 </div>
 
-                <!-- Input and Mode Selection Group -->
                 <div class="space-y-4 bg-stone-900 bg-opacity-60 p-5 rounded-2xl border border-stone-800">
                     <h3 class="text-lg font-bold text-yellow-400"><i class="fa-solid fa-gamepad mr-2"></i>2. 玩法与挑战 Game Modes</h3>
 
@@ -160,23 +152,18 @@
             </button>
         </section>
 
-        <!-- GAME PLAY AREA -->
         <section id="gameArea" class="hidden relative w-full h-[65vh] md:h-[70vh] bg-black rounded-3xl overflow-hidden comic-border flex items-center justify-center">
             
-            <!-- Camera Video Stream -->
             <video id="webcam" class="absolute w-full h-full object-cover scale-x-[-1] hidden pointer-events-none" autoplay playsinline></video>
             
-            <!-- Graphics Overlay Canvas -->
             <canvas id="gameCanvas" class="absolute w-full h-full z-10 cursor-crosshair"></canvas>
 
-            <!-- Loading camera overlay state -->
             <div id="cameraLoading" class="absolute inset-0 bg-stone-950 bg-opacity-95 flex flex-col items-center justify-center text-white space-y-4 z-20">
                 <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-orange-500"></div>
                 <h3 class="text-xl font-bold">📷 正在启动前置摄像头...</h3>
                 <p class="text-sm text-stone-400">Loading tracking system, please allow webcam access.</p>
             </div>
 
-            <!-- LEVEL-UP CONGRATULATORY CELEBRATION OVERLAY -->
             <div id="levelUpOverlay" class="absolute inset-0 bg-stone-950 bg-opacity-90 flex flex-col items-center justify-center z-25 hidden pointer-events-auto">
                 <div class="text-center space-y-4 p-8 bg-stone-900 border-4 border-yellow-400 rounded-3xl shadow-2xl max-w-md scale-95 transition-transform duration-500" id="levelUpBox">
                     <div class="text-7xl animate-bounce">🎉 🥳 🎉</div>
@@ -187,7 +174,6 @@
                 </div>
             </div>
 
-            <!-- SAFETY COUNTDOWN SHIELD OVERLAY -->
             <div id="countdownOverlay" class="absolute inset-0 bg-stone-950 bg-opacity-80 flex flex-col items-center justify-center z-20 hidden pointer-events-auto">
                 <div class="text-center space-y-3">
                     <h3 class="text-xl font-bold text-orange-400 uppercase tracking-widest">准备回到汉字闯关</h3>
@@ -196,27 +182,52 @@
                 </div>
             </div>
 
-            <!-- HUD Dashboard Overlay -->
-            <div class="absolute top-4 left-4 right-4 flex justify-between items-start z-10 pointer-events-none">
-                <!-- Word Target Placard Card -->
-                <div class="bg-black bg-opacity-80 rounded-2xl p-4 border-4 border-white shadow-lg max-w-xs md:max-w-md pointer-events-auto flex items-center space-x-4">
-                    <div>
-                        <p id="placardCategory" class="text-xs text-orange-400 font-bold uppercase tracking-widest">根据拼音找出词语 Find by Pinyin:</p>
-                        <h2 id="targetWordText" class="text-3xl md:text-5xl font-extrabold text-cyan-300 leading-tight tracking-wider" style="text-shadow: 0 0 10px rgba(6, 182, 212, 0.8);">加载中...</h2>
-                        <p id="targetWordTranslation" class="text-sm text-stone-300 font-semibold italic">...</p>
+            <div id="pauseOverlay" class="absolute inset-0 bg-stone-950 bg-opacity-90 flex flex-col items-center justify-center z-25 hidden pointer-events-auto">
+                <div class="text-center space-y-6 p-8 bg-stone-900 border-4 border-blue-500 rounded-3xl shadow-2xl max-w-md">
+                    <div class="text-6xl text-blue-400 animate-pulse"><i class="fa-solid fa-circle-pause"></i></div>
+                    <h2 class="text-4xl font-black text-blue-400" style="font-family: 'ZCOOL KuaiLe', sans-serif;">游戏已暂停</h2>
+                    <p class="text-stone-300 text-sm">Game and tracking are currently paused.</p>
+                    <div class="flex flex-col space-y-3 pt-2">
+                        <button id="resumeGameBtn" class="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-xl shadow transition-all">
+                            <i class="fa-solid fa-play mr-2"></i> 继续游戏 Resume
+                        </button>
+                        <button id="pauseBackBtn" class="w-full py-3 bg-stone-700 hover:bg-stone-600 text-white font-bold rounded-xl shadow transition-all">
+                            <i class="fa-solid fa-chevron-left mr-2"></i> 返回菜单 Main Menu
+                        </button>
+                        <button id="pauseEndBtn" class="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow transition-all">
+                            <i class="fa-solid fa-square-poll-vertical mr-2"></i> 结算结果 End Game
+                        </button>
                     </div>
-                    <button id="speakTargetBtn" class="bg-orange-500 hover:bg-orange-600 text-white rounded-xl p-3 shadow border-2 border-white transition-all">
-                        <i class="fa-solid fa-volume-high text-lg"></i>
-                    </button>
+                </div>
+            </div>
+
+            <div class="absolute top-4 left-4 right-4 flex justify-between items-start z-10 pointer-events-none">
+                <div class="bg-black bg-opacity-80 rounded-2xl p-4 border-4 border-white shadow-lg max-w-xs md:max-w-md pointer-events-auto flex flex-col space-y-3">
+                    <div class="flex items-center space-x-4">
+                        <div>
+                            <p id="placardCategory" class="text-xs text-orange-400 font-bold uppercase tracking-widest">根据拼音找出词语 Find by Pinyin:</p>
+                            <h2 id="targetWordText" class="text-3xl md:text-5xl font-extrabold text-cyan-300 leading-tight tracking-wider" style="text-shadow: 0 0 10px rgba(6, 182, 212, 0.8);">加载中...</h2>
+                            <p id="targetWordTranslation" class="text-sm text-stone-300 font-semibold italic">...</p>
+                        </div>
+                        <button id="speakTargetBtn" class="bg-orange-500 hover:bg-orange-600 text-white rounded-xl p-3 shadow border-2 border-white transition-all">
+                            <i class="fa-solid fa-volume-high text-lg"></i>
+                        </button>
+                    </div>
+                    <div class="flex items-center space-x-2 border-t border-stone-800 pt-2">
+                        <button id="pinyinHintBtn" class="flex-1 py-1 px-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow border border-white">
+                            <i class="fa-solid fa-lightbulb text-yellow-300 mr-1"></i> 提示 Hint
+                        </button>
+                        <button id="inGamePauseBtn" class="py-1 px-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold transition shadow">
+                            <i class="fa-solid fa-pause"></i> 暂停
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Game Stats Panel -->
                 <div class="flex flex-col space-y-2 pointer-events-auto">
                     <div class="bg-black bg-opacity-80 rounded-2xl py-2 px-4 border-2 border-stone-700 shadow-md flex justify-between items-center space-x-4">
                         <span class="text-stone-400 font-bold text-sm">分数 SCORE:</span>
                         <span id="scoreDisplay" class="text-3xl font-extrabold text-green-400">0</span>
                     </div>
-                    <!-- Combined HUD showing both Points & Mini Game Coins separately -->
                     <div id="coinCard" class="bg-black bg-opacity-85 rounded-2xl py-2 px-4 border-2 border-yellow-500 shadow-md flex justify-between items-center space-x-4 hidden">
                         <span class="text-yellow-400 font-bold text-sm">金币 COINS:</span>
                         <span id="coinDisplay" class="text-3xl font-extrabold text-yellow-300">0</span>
@@ -232,13 +243,11 @@
                 </div>
             </div>
 
-            <!-- Eat Evaluation Popups -->
             <div id="feedbackPopup" class="absolute text-5xl font-extrabold text-center text-white scale-0 transition-transform duration-300 z-30 pointer-events-none drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]">
                 YUMMY! 😋
             </div>
         </section>
 
-        <!-- GAME OVER BOARD -->
         <section id="gameOverScreen" class="hidden w-full max-w-xl setup-card rounded-3xl p-8 flex flex-col items-center text-center space-y-6 z-20">
             <h2 id="endTitle" class="text-4xl text-orange-400 font-extrabold">🏆 精彩极了！</h2>
             <p id="endSubtitle" class="text-stone-300 text-lg">你完成了一场极佳 of 华文挑战。</p>
@@ -269,14 +278,12 @@
         </section>
     </main>
 
-    <!-- SLIDE-OUT PANEL FOR ARCHIVED WORD HISTORY -->
     <div id="historyDrawer" class="fixed right-0 top-0 bottom-0 w-80 bg-stone-950 border-l-4 border-amber-950 z-40 transform translate-x-full transition-transform duration-300 flex flex-col">
         <div class="bg-stone-900 text-white p-4 border-b-4 border-amber-950 flex justify-between items-center">
             <h3 class="font-black text-xl text-orange-400"><i class="fa-solid fa-trophy mr-2 text-yellow-300"></i>大闯关成绩单</h3>
             <button id="closeDrawerBtn" class="text-white hover:text-orange-200 text-2xl"><i class="fa-solid fa-xmark"></i></button>
         </div>
         
-        <!-- Toggle Tabs: Mastered vs Mistakes -->
         <div class="flex border-b-2 border-amber-950 bg-stone-900">
             <button id="tabCorrect" class="flex-1 py-3 text-center font-bold text-green-400 border-b-4 border-green-500 bg-stone-900 bg-opacity-40 transition-all">
                 <i class="fa-solid fa-circle-check mr-1"></i> 正确 (<span id="countCorrect">0</span>)
@@ -286,26 +293,22 @@
             </button>
         </div>
 
-        <!-- tab list scrolls container -->
         <div class="flex-1 overflow-y-auto p-4">
-            <!-- Correct answers scroll stack -->
             <div id="historyCorrectList" class="space-y-3">
                 <p id="emptyHistoryMsg" class="text-stone-500 text-center py-8">目前还没有掌握词汇，开始游戏吞掉它们吧！</p>
             </div>
-            <!-- Incorrect answers scroll stack (hidden initially) -->
             <div id="historyWrongList" class="space-y-3 hidden">
                 <p id="emptyWrongMsg" class="text-stone-500 text-center py-8">很棒！目前没有错题记录。</p>
             </div>
         </div>
     </div>
 
-    <!-- FOOTER COPYRIGHT SECTION -->
     <footer class="w-full text-center py-2 text-xs text-stone-500 font-medium bg-stone-950 border-t-2 border-stone-900">
         Aligns directly with Ministry of Education (MOE) Singapore Chinese Curriculums. Designed for interactive revision.
     </footer>
 
     <script>
-        // COMPREHENSIVE VOCABULARY DATABASE (At least 50+ rich exam words/phrases per sub-list, with Higher P4-P6 inheriting P1-P3 recaps)
+        // COMPREHENSIVE SANITIZED VOCABULARY DATABASE
         const vocabularyDatabase = {
             'P1': {
                 'standard': [
@@ -343,7 +346,7 @@
                     { word: "橡皮", pinyin: "xiàng pí", translation: "Eraser" },
                     { word: "桌子", pinyin: "zhuō zi", translation: "Table" },
                     { word: "椅子", pinyin: "yǐ zi", translation: "Chair" },
-                    { word: "教室", pinyin: "jiào  shì", translation: "Classroom" },
+                    { word: "教室", pinyin: "jiào shì", translation: "Classroom" },
                     { word: "同学", pinyin: "tóng xué", translation: "Classmate" },
                     { word: "爸爸", pinyin: "bà ba", translation: "Father" },
                     { word: "妈妈", pinyin: "mā ma", translation: "Mother" },
@@ -489,7 +492,7 @@
                     { word: "珍惜", pinyin: "zhēn xī", translation: "Cherish" },
                     { word: "诚实", pinyin: "chéng shí", translation: "Honest" },
                     { word: "虚心", pinyin: "xū xīn", translation: "Humble/Open-minded" },
-                    { word: "懂事", pinyin: "dǒng shì", translation: "Sensible" },
+                    { word: "懂事", pinyin: "dǒng  shì", translation: "Sensible" },
                     { word: "勇敢", pinyin: "yǒng gǎn", translation: "Brave" },
                     { word: "感谢", pinyin: "gǎn xiè", translation: "Thankful" },
                     { word: "特别", pinyin: "tè bié", translation: "Special" },
@@ -621,7 +624,7 @@
                     { word: "同伴", pinyin: "tóng bàn", translation: "Companion" },
                     { word: "环境", pinyin: "huán jìng", translation: "Environment" },
                     { word: "游戏", pinyin: "yóu xì", translation: "Game" },
-                    { word: "懂事", pinyin: "dǒng shì", translation: "Sensible" },
+                    { word: "懂事", pinyin: "dǒng  shì", translation: "Sensible" },
                     { word: "勇敢", pinyin: "yǒng gǎn", translation: "Brave" },
                     { word: "感谢", pinyin: "gǎn xiè", translation: "Thankful" },
                     { word: "自私", pinyin: "zì sī", translation: "Selfish" },
@@ -866,8 +869,8 @@
                     { word: "友谊", pinyin: "yǒu yì", translation: "Friendship" },
                     { word: "珍惜", pinyin: "zhēn xī", translation: "Cherish" },
                     { word: "信任", pinyin: "xìn rèn", translation: "Trust" },
-                    { word: "得意外形", pinyin: "dé yì wài xíng", translation: "得意 (recap)" },
-                    { word: "解决问题", pinyin: "jiě jué wèn tí", translation: "解决 (recap)" },
+                    { word: "得意外形", pinyin: "dé yì wài xíng", translation: "Proud appearance" },
+                    { word: "解决问题", pinyin: "jiě jué wèn tí", translation: "Solve problems" },
                     { word: "宽容大度", pinyin: "kuān róng dà dù", translation: "宽容 (recap)" },
                     { word: "勤奋学习", pinyin: "qín fèn xué xí", translation: "勤奋 (recap)" },
                     { word: "勇敢面对", pinyin: "yǒng gǎn miàn duì", translation: "勇敢 (recap)" },
@@ -961,7 +964,7 @@
                     { word: "特别", pinyin: "tè bié", translation: "Special" },
                     { word: "准备", pinyin: "zhǔn bèi", translation: "Prepare" },
                     { word: "已经", pinyin: "yǐ jīng", translation: "Already" },
-                    { word: "应该", pinyin: "yīng gāi", translation: "Should" },
+                    { word: "should", pinyin: "yīng gāi", translation: "Should" },
                     { word: "安全", pinyin: "ān quán", translation: "Safe/Safety" },
                     { word: "健康", pinyin: "jiàn kāng", translation: "Healthy" },
                     { word: "甚至", pinyin: "shèn zhì", translation: "Even" },
@@ -1016,7 +1019,7 @@
                     { word: "毅力", pinyin: "yì lì", translation: "Willpower" },
                     { word: "关键", pinyin: "guān jiàn", translation: "Key/Crucial" },
                     { word: "掌握", pinyin: "zhǎng wò", translation: "Master/Grasp" },
-                    { word: "卓越", pinyin: "zhuó yûe", translation: "Outstanding" },
+                    { word: "卓越", pinyin: "zhuó yuè", translation: "Outstanding / Excellent" },
                     { word: "荣誉", pinyin: "róng yù", translation: "Honor" },
                     { word: "敬佩", pinyin: "jìng pèi", translation: "Admire" },
                     { word: "执着", pinyin: "zhí zhuó", translation: "Persistent" },
@@ -1039,8 +1042,8 @@
                     { word: "友谊", pinyin: "yǒu yì", translation: "Friendship" },
                     { word: "珍惜", pinyin: "zhēn xī", translation: "Cherish" },
                     { word: "信任", pinyin: "xìn rèn", translation: "Trust" },
-                    { word: "得意外形", pinyin: "dé yì wài xíng", translation: "得意 (recap)" },
-                    { word: "解决问题", pinyin: "jiě jué wèn tí", translation: "解决 (recap)" },
+                    { word: "得意外形", pinyin: "dé yì wài xíng", translation: "Proud appearance" },
+                    { word: "解决问题", pinyin: "jiě jué wèn tí", translation: "Solve problems" },
                     { word: "宽容大度", pinyin: "kuān róng dà dù", translation: "宽容 (recap)" },
                     { word: "勤奋学习", pinyin: "qín fèn xué xí", translation: "勤奋 (recap)" },
                     { word: "勇敢面对", pinyin: "yǒng gǎn miàn duì", translation: "勇敢 (recap)" },
@@ -1206,7 +1209,7 @@
                 const ctx = this.ctx;
                 this.bgmStep = 0;
                 this.bgmInterval = setInterval(() => {
-                    if (gameConfig.isMuted || gameConfig.gameState === 'setup' || gameConfig.gameState === 'gameover' || gameConfig.gameState === 'countdown' || gameConfig.gameState === 'transition_pause' || gameConfig.gameState === 'celebration') {
+                    if (gameConfig.isMuted || gameConfig.gameState !== 'playing') {
                         return;
                     }
                     const osc = ctx.createOscillator();
@@ -1214,9 +1217,7 @@
                     osc.connect(gain);
                     gain.connect(ctx.destination);
                     
-                    // Simple retro base progression + melodic sequencing
                     if (this.bgmStep % 2 === 0) {
-                        // Soft rhythmic bass note
                         const bassNotes = [130.81, 146.83, 164.81, 196.00];
                         const note = bassNotes[Math.floor(this.bgmStep / 2) % bassNotes.length];
                         osc.frequency.setValueAtTime(note, ctx.currentTime);
@@ -1224,7 +1225,6 @@
                         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
                         osc.type = 'triangle';
                     } else {
-                        // Playful melodic sequence
                         const note = this.bgmMelody[this.bgmStep % this.bgmMelody.length];
                         osc.frequency.setValueAtTime(note, ctx.currentTime);
                         gain.gain.setValueAtTime(0.015, ctx.currentTime);
@@ -1235,7 +1235,7 @@
                     osc.start();
                     osc.stop(ctx.currentTime + 0.4);
                     this.bgmStep++;
-                }, 250); // Loop tempo step
+                }, 250);
             },
             stopBGM() {
                 if (this.bgmInterval) {
@@ -1245,7 +1245,7 @@
             }
         };
 
-        // SPEECH SYNTHESIS ENGINE (好吃 / 难难 vocals on chomping)
+        // SPEECH SYNTHESIS ENGINE
         function playChompVoice(isCorrect) {
             if (gameConfig.isMuted) return;
             window.speechSynthesis.cancel();
@@ -1254,16 +1254,16 @@
             if (isCorrect) {
                 msg.text = "好吃！";
                 msg.rate = 1.35;
-                msg.pitch = 1.35; // Bright, peppy cute voice!
+                msg.pitch = 1.35;
             } else {
                 msg.text = "难吃！";
                 msg.rate = 1.0;
-                msg.pitch = 0.8; // Low, funny yucky sound
+                msg.pitch = 0.8;
             }
             window.speechSynthesis.speak(msg);
         }
 
-        // CURRENT GAME STATE
+        // CURRENT GAME STATE CONFIGS
         const gameConfig = {
             selectedLevel: 'P5',
             selectedStream: 'standard',
@@ -1271,13 +1271,15 @@
             selectedRule: 'timed',
             isMuted: false,
             score: 0,
-            coins: 0, // Coins collected strictly in the bonus mini game
-            metricVal: 90, // Timed game set directly to 90s instead of 60s
+            coins: 0, 
+            metricVal: 90, 
             gameLevel: 1,
             lastBonusThreshold: 0, 
             gameState: 'setup', 
             masteredWords: new Set(),
-            mistakeWords: new Set() // Keeps track of wrong attempts uniquely
+            mistakeWords: new Set(),
+            showPinyinHints: false,
+            faceIsDetected: false
         };
 
         // SELECT SETUP MODES DYNAMICALLY WITH STYLISH AND UNMISTAKABLE SELECTION UI
@@ -1288,20 +1290,16 @@
                     AudioEngine.init();
                     AudioEngine.playSelect();
                     
-                    // Reset all sibling buttons to clean inactive style
                     buttons.forEach(b => {
                         b.className = `${groupClass} py-2 px-3 bg-stone-800 text-stone-300 border-2 border-stone-700 rounded-xl font-bold transition-all text-sm hover:border-orange-500`;
                     });
                     
-                    // Style the selected button with beautiful high-contrast design
                     btn.className = `${groupClass} py-2 px-3 bg-orange-500 text-white ring-4 ring-orange-400 border-orange-600 scale-105 shadow-md rounded-xl font-bold transition-all text-sm`;
-                    
                     gameConfig[configKey] = btn.getAttribute('data-val');
                 });
             });
         };
 
-        // Initialize selectors
         setupSelector('level-btn', 'selectedLevel');
         setupSelector('stream-btn', 'selectedStream');
         setupSelector('control-btn', 'selectedControl');
@@ -1325,7 +1323,7 @@
             }
         });
 
-        // DRAWER TAB MECHANICS (Correct vs Mistakes)
+        // DRAWER TAB MECHANICS
         const tabCorrect = document.getElementById('tabCorrect');
         const tabWrong = document.getElementById('tabWrong');
         const historyCorrectList = document.getElementById('historyCorrectList');
@@ -1359,6 +1357,55 @@
             historyDrawer.classList.add('translate-x-full');
         });
 
+        // NAVIGATION CONTROLS BUTTON REGISTRATIONS
+        const pauseOverlay = document.getElementById('pauseOverlay');
+        
+        document.getElementById('inGamePauseBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (gameConfig.gameState === 'playing' || gameConfig.gameState === 'bonus') {
+                AudioEngine.playSelect();
+                gameConfig.gameState = 'paused';
+                pauseOverlay.classList.remove('hidden');
+                AudioEngine.stopBGM();
+            }
+        });
+
+        document.getElementById('resumeGameBtn').addEventListener('click', () => {
+            AudioEngine.playSelect();
+            pauseOverlay.classList.add('hidden');
+            gameConfig.gameState = 'playing';
+            AudioEngine.startBGM();
+            if (gameConfig.selectedControl !== 'eat') start2DAnimationLoop();
+        });
+
+        document.getElementById('pauseBackBtn').addEventListener('click', () => {
+            AudioEngine.playSelect();
+            pauseOverlay.classList.add('hidden');
+            stopGameAndTracking();
+            document.getElementById('gameArea').classList.add('hidden');
+            document.getElementById('setupScreen').classList.remove('hidden');
+            gameConfig.gameState = 'setup';
+        });
+
+        document.getElementById('pauseEndBtn').addEventListener('click', () => {
+            AudioEngine.playSelect();
+            pauseOverlay.classList.add('hidden');
+            endGame();
+        });
+
+        // PINYIN HINT SCAFFOLD TOGGLE TRIGGER
+        document.getElementById('pinyinHintBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            AudioEngine.playSelect();
+            gameConfig.showPinyinHints = !gameConfig.showPinyinHints;
+            const btn = document.getElementById('pinyinHintBtn');
+            if (gameConfig.showPinyinHints) {
+                btn.className = "flex-1 py-1 px-2 bg-green-600 text-white rounded-lg text-xs font-black transition shadow border border-white scale-105";
+            } else {
+                btn.className = "flex-1 py-1 px-2 bg-blue-600 text-white rounded-lg text-xs font-bold transition shadow border border-white";
+            }
+        });
+
         // WEBCAM & GRAPHICS LOOP INITIALIZATION
         const videoElement = document.getElementById('webcam');
         const canvasElement = document.getElementById('gameCanvas');
@@ -1373,7 +1420,6 @@
         let mouthPosition = { x: 0, y: 0, isOpen: false, diameter: 0 };
         let timerInterval = null;
 
-        // Graphic screen shake controller
         let isScreenShaking = false;
         let shakeEndTime = 0;
 
@@ -1388,7 +1434,6 @@
             }, 400);
         }
 
-        // Particle system
         let particles = [];
         class Particle {
             constructor(x, y, char, color) {
@@ -1417,7 +1462,6 @@
             }
         }
 
-        // Confetti Particle System (for level-up celebration)
         let confetti = [];
         class Confetti {
             constructor(x, y) {
@@ -1425,7 +1469,7 @@
                 this.y = y;
                 this.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
                 this.vx = (Math.random() - 0.5) * 16;
-                this.vy = (Math.random() - 0.5) * 16 - 12; // explosive jump up
+                this.vy = (Math.random() - 0.5) * 16 - 12; 
                 this.gravity = 0.3;
                 this.size = Math.random() * 8 + 6;
                 this.alpha = 1.0;
@@ -1450,7 +1494,6 @@
             }
         }
 
-        // Gold Rush basket and drop items
         let fallingItems = [];
         let basketPosition = { x: 0, y: 0, width: 130, height: 40 };
 
@@ -1516,28 +1559,21 @@
             if (gameConfig.isMuted) return;
             window.speechSynthesis.cancel();
             
-            // Adjust specific words that standard TTS engines often mispronounce
-            // e.g., adding a space between "难" and "难" or "奶" and "奶" prevents dialect blending bugs
             let spokenText = text.replace(/奶奶/g, "奶 奶");
-            
             const msg = new SpeechSynthesisUtterance();
             msg.text = spokenText;
             msg.lang = 'zh-CN';
             
             const voices = window.speechSynthesis.getVoices();
-            // Search for premium standard Mandarin voices first (Tingting, Huihui, Yaoyao, Xiaoxiao, Google)
             let preferredVoice = voices.find(v => 
                 (v.lang.includes('zh-CN') || v.lang.includes('zh-SG')) && 
                 (v.name.includes('Tingting') || v.name.includes('Huihui') || v.name.includes('Yaoyao') || v.name.includes('Xiaoxiao') || v.name.includes('Google'))
             );
             
-            // Fallback to standard Chinese/Singapore voice if premium voices aren't loaded yet
             if (!preferredVoice) {
                 preferredVoice = voices.find(v => v.lang.includes('zh-CN') || v.lang.includes('zh-SG'));
             }
-            
             if (preferredVoice) msg.voice = preferredVoice;
-            
             window.speechSynthesis.speak(msg);
         }
 
@@ -1567,19 +1603,13 @@
             setPointerPosFromEvent(e);
             pointerPos.clicked = true;
         });
-        canvasElement.addEventListener('mouseup', () => {
-            pointerPos.clicked = false;
-        });
-        canvasElement.addEventListener('touchmove', (e) => {
-            setPointerPosFromEvent(e);
-        });
+        canvasElement.addEventListener('mouseup', () => { pointerPos.clicked = false; });
+        canvasElement.addEventListener('touchmove', setPointerPosFromEvent);
         canvasElement.addEventListener('touchstart', (e) => {
             setPointerPosFromEvent(e);
             pointerPos.clicked = true;
         });
-        canvasElement.addEventListener('touchend', () => {
-            pointerPos.clicked = false;
-        });
+        canvasElement.addEventListener('touchend', () => { pointerPos.clicked = false; });
 
         // INITIATE ACTIVE PLAY SESSIONS
         document.getElementById('startGameBtn').addEventListener('click', async () => {
@@ -1603,12 +1633,13 @@
 
         async function initGame() {
             gameConfig.score = 0;
-            gameConfig.coins = 0; // Reset coins separately from vocabulary score
+            gameConfig.coins = 0; 
             gameConfig.gameLevel = 1;
             gameConfig.lastBonusThreshold = 0;
             gameConfig.gameState = 'playing';
+            gameConfig.showPinyinHints = false;
+            document.getElementById('pinyinHintBtn').className = "flex-1 py-1 px-2 bg-blue-600 text-white rounded-lg text-xs font-bold transition shadow border border-white";
             
-            // Clean side drawer records reset
             gameConfig.masteredWords.clear();
             gameConfig.mistakeWords.clear();
             document.getElementById('historyCorrectList').innerHTML = `<p id="emptyHistoryMsg" class="text-stone-500 text-center py-8">目前还没有掌握词汇，开始游戏吞掉它们吧！</p>`;
@@ -1625,29 +1656,23 @@
             document.getElementById('coinCard').classList.add('hidden');
             document.getElementById('levelUpOverlay').classList.add('hidden');
             document.getElementById('countdownOverlay').classList.add('hidden');
+            pauseOverlay.classList.add('hidden');
 
             const vocabulary = vocabularyDatabase[gameConfig.selectedLevel]?.[gameConfig.selectedStream] || vocabularyDatabase['P5']['standard'];
-            
             activeWords = [];
             
-            // SPAN COUNT CHANGED: Spawning 6 words instead of 12 so that words are not clustered!
             const spawnCount = Math.min(6, vocabulary.length);
             const chosenIndices = [];
             while (chosenIndices.length < spawnCount) {
                 const randIndex = Math.floor(Math.random() * vocabulary.length);
-                if (!chosenIndices.includes(randIndex)) {
-                    chosenIndices.push(randIndex);
-                }
+                if (!chosenIndices.includes(randIndex)) chosenIndices.push(randIndex);
             }
 
-            chosenIndices.forEach(idx => {
-                activeWords.push(createWordElement(vocabulary[idx]));
-            });
-
+            chosenIndices.forEach(idx => { activeWords.push(createWordElement(vocabulary[idx])); });
             pickNewTargetWord();
 
             if (gameConfig.selectedRule === 'timed') {
-                gameConfig.metricVal = 90; // CHANGED TIMER: Increased from 60 seconds to 90 seconds
+                gameConfig.metricVal = 90; 
                 document.getElementById('metricLabel').innerText = "时间 TIMER:";
                 document.getElementById('metricDisplay').innerText = gameConfig.metricVal;
                 document.getElementById('metricCard').classList.remove('hidden');
@@ -1666,14 +1691,11 @@
                     if (gameConfig.gameState === 'playing') {
                         gameConfig.metricVal--;
                         document.getElementById('metricDisplay').innerText = gameConfig.metricVal;
-                        if (gameConfig.metricVal <= 0) {
-                            endGame();
-                        }
+                        if (gameConfig.metricVal <= 0) endGame();
                     }
                 }, 1000);
             }
 
-            // Start fun background music loop
             AudioEngine.startBGM();
 
             if (gameConfig.selectedControl === 'eat') {
@@ -1688,18 +1710,15 @@
         }
 
         function createWordElement(vocabObj) {
-            // FIXED SPEED: Standardized base physics speed scale to a reasonable speed of 5 (with no exponential speed-up)
             const baseSpeed = 5;
             return {
                 word: vocabObj.word,
                 pinyin: vocabObj.pinyin,
                 translation: vocabObj.translation,
-                x: Math.random() * (canvasElement.width ? canvasElement.width - 200 : window.innerWidth - 300) + 100,
-                y: Math.random() * (canvasElement.height ? canvasElement.height - 250 : window.innerHeight - 400) + 200,
+                x: Math.random() * (canvasElement.width ? canvasElement.width - 250 : window.innerWidth - 350) + 100,
+                y: Math.random() * (canvasElement.height ? canvasElement.height - 300 : window.innerHeight - 450) + 250,
                 vx: (Math.random() - 0.5) * baseSpeed,
-                vy: (Math.random() - 0.5) * baseSpeed,
-                // Adjust boundaries slightly for a standard circle footprint
-                radius: 40
+                vy: (Math.random() - 0.5) * baseSpeed
             };
         }
 
@@ -1713,9 +1732,7 @@
             document.getElementById('placardCategory').innerText = "根据拼音找出词语 Find by Pinyin:";
 
             setTimeout(() => {
-                if (gameConfig.gameState === 'playing') {
-                    speakWord(chosen.word);
-                }
+                if (gameConfig.gameState === 'playing') speakWord(chosen.word);
             }, 250);
         }
 
@@ -1741,7 +1758,7 @@
 
             cameraModule = new Camera(videoElement, {
                 onFrame: async () => {
-                    if (gameConfig.gameState === 'playing' || gameConfig.gameState === 'bonus' || gameConfig.gameState === 'countdown') {
+                    if (gameConfig.gameState !== 'setup' && gameConfig.gameState !== 'gameover' && gameConfig.gameState !== 'paused') {
                         await faceMeshModule.send({ image: videoElement });
                     }
                 },
@@ -1765,37 +1782,59 @@
 
         // CORE RECURSIVE RENDER CONTROLLER
         function onMeshTrackingFrame(results) {
+            if (gameConfig.gameState === 'paused') return;
             matchCanvasSizing();
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
-            // Mirror video frame background
             canvasCtx.save();
             canvasCtx.scale(-1, 1);
             canvasCtx.translate(-canvasElement.width, 0);
             canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
             canvasCtx.restore();
 
+            // VISUAL FACE POSITIONING OVERLAY ZONE (HUD GUIDANCE)
+            canvasCtx.save();
+            canvasCtx.strokeStyle = "rgba(255, 255, 255, 0.25)";
+            canvasCtx.lineWidth = 4;
+            canvasCtx.setLineDash([8, 8]);
+            canvasCtx.beginPath();
+            canvasCtx.ellipse(canvasElement.width / 2, canvasElement.height / 2, 160, 220, 0, 0, Math.PI * 2);
+            canvasCtx.stroke();
+            canvasCtx.restore();
+
             if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+                gameConfig.faceIsDetected = true;
                 const landmarks = results.multiFaceLandmarks[0];
                 const upperInnerLip = landmarks[13];
                 const lowerInnerLip = landmarks[14];
                 
-                // Track coordinates elegantly
                 mouthPosition.x = (1 - upperInnerLip.x) * canvasElement.width;
                 mouthPosition.y = upperInnerLip.y * canvasElement.height;
                 mouthPosition.isOpen = Math.abs(upperInnerLip.y - lowerInnerLip.y) > 0.045;
                 
-                // RESTORED: Simple classic outer tracking circle cursor (no panda!)
                 canvasCtx.save();
                 canvasCtx.beginPath();
                 canvasCtx.arc(mouthPosition.x, mouthPosition.y, 40, 0, Math.PI * 2);
                 canvasCtx.strokeStyle = mouthPosition.isOpen ? "#00ff88" : "white";
                 canvasCtx.lineWidth = 5;
                 canvasCtx.stroke();
+                
+                canvasCtx.fillStyle = "#00ff88";
+                canvasCtx.font = "bold 14px sans-serif";
+                canvasCtx.fillText("✅ 脸部已连接 Face Connected", 30, canvasElement.height - 30);
+                canvasCtx.restore();
+            } else {
+                gameConfig.faceIsDetected = false;
+                canvasCtx.save();
+                canvasCtx.fillStyle = "rgba(239, 68, 68, 0.85)";
+                canvasCtx.fillRect(canvasElement.width / 2 - 200, canvasElement.height / 2 - 30, 400, 60);
+                canvasCtx.fillStyle = "white";
+                canvasCtx.font = "bold 20px sans-serif";
+                canvasCtx.textAlign = "center";
+                canvasCtx.fillText("⚠️ 请把脸对准镜头 Please Frame Your Face", canvasElement.width / 2, canvasElement.height / 2 + 6);
                 canvasCtx.restore();
             }
 
-            // Render loop branch
             if (gameConfig.gameState === 'playing' || gameConfig.gameState === 'transition_pause') {
                 runVocabMainLoop();
             } else if (gameConfig.gameState === 'bonus') {
@@ -1806,30 +1845,22 @@
         }
 
         function start2DAnimationLoop() {
+            if (gameConfig.gameState === 'paused') return;
             matchCanvasSizing();
             
             function tick() {
+                if (gameConfig.gameState === 'paused') return;
+                canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+                canvasCtx.fillStyle = '#0f172a';
+                canvasCtx.fillRect(0, 0, canvasElement.width, canvasElement.height);
+                
                 if (gameConfig.gameState === 'playing' || gameConfig.gameState === 'transition_pause') {
-                    canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-                    
-                    // Draw clean solid background for tap mode inside canvas
-                    canvasCtx.fillStyle = '#0f172a';
-                    canvasCtx.fillRect(0, 0, canvasElement.width, canvasElement.height);
-                    
                     runVocabMainLoop();
                     animationFrameId = requestAnimationFrame(tick);
                 } else if (gameConfig.gameState === 'bonus') {
-                    canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-                    
-                    canvasCtx.fillStyle = '#0f172a';
-                    canvasCtx.fillRect(0, 0, canvasElement.width, canvasElement.height);
-                    
                     runGoldRushMiniGameLoop();
                     animationFrameId = requestAnimationFrame(tick);
                 } else if (gameConfig.gameState === 'countdown') {
-                    canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-                    canvasCtx.fillStyle = '#0f172a';
-                    canvasCtx.fillRect(0, 0, canvasElement.width, canvasElement.height);
                     runCountdownOnlyLoop();
                     animationFrameId = requestAnimationFrame(tick);
                 }
@@ -1845,8 +1876,8 @@
                 canvasElement.height = canvasElement.parentElement.clientHeight;
                 
                 activeWords.forEach(w => {
-                    if (w.x > canvasElement.width) w.x = canvasElement.width - 150;
-                    if (w.y > canvasElement.height) w.y = canvasElement.height - 150;
+                    if (w.x > canvasElement.width) w.x = canvasElement.width - 200;
+                    if (w.y > canvasElement.height) w.y = canvasElement.height - 200;
                 });
             }
         }
@@ -1858,13 +1889,12 @@
             if (gameConfig.selectedControl === 'eat') {
                 trackerX = mouthPosition.x;
                 trackerY = mouthPosition.y;
-                isInteracting = mouthPosition.isOpen;
+                isInteracting = mouthPosition.isOpen && gameConfig.faceIsDetected;
             } else {
                 trackerX = pointerPos.x;
                 trackerY = pointerPos.y;
                 isInteracting = pointerPos.clicked;
 
-                // Classic targeting reticle overlay for Tap Mode
                 canvasCtx.save();
                 canvasCtx.strokeStyle = isInteracting ? '#00ff88' : 'white';
                 canvasCtx.lineWidth = 4;
@@ -1875,35 +1905,58 @@
             }
 
             activeWords.forEach(wordObj => {
-                // High-speed physics updates (FIXED: speed scale remains reasonable constant value of 5)
                 if (gameConfig.gameState !== 'transition_pause') {
                     wordObj.x += wordObj.vx;
                     wordObj.y += wordObj.vy;
                 }
 
-                // FIXED BOUNDARY physics constraints: Bounces at Y = 220 so they NEVER drift behind placard prompts!
+                // FIXED BOUNDARY: Bounces at Y = 220 so they NEVER drift behind placard prompts!
                 if (wordObj.x < 50) { wordObj.x = 50; wordObj.vx *= -1; }
-                if (wordObj.x > canvasElement.width - 120) { wordObj.x = canvasElement.width - 120; wordObj.vx *= -1; }
+                if (wordObj.x > canvasElement.width - 180) { wordObj.x = canvasElement.width - 180; wordObj.vx *= -1; }
                 if (wordObj.y < 220) { wordObj.y = 220; wordObj.vy *= -1; }
-                if (wordObj.y > canvasElement.height - 50) { wordObj.y = canvasElement.height - 50; wordObj.vy *= -1; }
+                if (wordObj.y > canvasElement.height - 60) { wordObj.y = canvasElement.height - 60; wordObj.vy *= -1; }
 
-                // RESTORED: Drawing clean Chinese characters directly on canvas with zero bulky bubble shapes
+                // ADAPTIVE BOX CALCULATIONS & TYPOGRAPHY ENFORCEMENT (KaiTi)
                 canvasCtx.save();
-                canvasCtx.font = 'bold 45px sans-serif';
-                canvasCtx.shadowColor = "black";
-                canvasCtx.shadowBlur = 10;
-                canvasCtx.fillStyle = gameConfig.gameState === 'transition_pause' ? "rgba(255,255,255,0.4)" : "white"; // dim out slightly during freeze pause
-                canvasCtx.fillText(wordObj.word, wordObj.x, wordObj.y);
+                canvasCtx.font = 'bold 45px "STKaiti", "KaiTi", "Noto Serif SC", serif, sans-serif';
+                const metrics = canvasCtx.measureText(wordObj.word);
+                const textWidth = metrics.width;
+                const textHeight = 45; 
+                const padding = 15;
+
+                // FLOATING CONTRAST SHIELDS (Webcam Readability)
+                canvasCtx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+                canvasCtx.strokeStyle = wordObj.word === targetWordObj?.word && gameConfig.showPinyinHints ? '#06b6d4' : '#f97316';
+                canvasCtx.lineWidth = 3;
+                canvasCtx.beginPath();
+                canvasCtx.roundRect(wordObj.x - padding, wordObj.y - textHeight - 5, textWidth + (padding * 2), textHeight + 25, 12);
+                canvasCtx.fill();
+                canvasCtx.stroke();
+
+                // DYNAMIC HINT SCAFFOLDING DRAW
+                if (gameConfig.showPinyinHints) {
+                    canvasCtx.fillStyle = '#67e8f9';
+                    canvasCtx.font = 'bold 16px sans-serif';
+                    canvasCtx.textAlign = 'center';
+                    canvasCtx.fillText(wordObj.pinyin, wordObj.x + (textWidth / 2), wordObj.y - textHeight - 12);
+                }
+
+                // Render standard Chinese character strokes cleanly
+                canvasCtx.fillStyle = gameConfig.gameState === 'transition_pause' ? "rgba(255,255,255,0.4)" : "white";
+                canvasCtx.font = 'bold 45px "STKaiti", "KaiTi", "Noto Serif SC", serif, sans-serif';
+                canvasCtx.textAlign = 'left';
+                canvasCtx.fillText(wordObj.word, wordObj.x, wordObj.y + 10);
                 canvasCtx.restore();
 
-                // COLLISION MECHANIC
-                // Adjust collision coordinate offsets to perfectly align with text baseline
-                const dx = trackerX - (wordObj.x + 30);
-                const dy = trackerY - (wordObj.y - 20);
-                const dist = Math.sqrt(dx*dx + dy*dy);
+                // DYNAMIC ADAPTIVE COLLISION BOUNDING HOOKS (AABB Intersection checking)
+                const boxLeft = wordObj.x - padding;
+                const boxRight = wordObj.x + textWidth + padding;
+                const boxTop = wordObj.y - textHeight - 5;
+                const boxBottom = wordObj.y + 20;
 
-                // COLLISION GUARDED: Bypassed during brief transition_pause state!
-                if (gameConfig.gameState === 'playing' && dist < 70 && isInteracting) {
+                const isColliding = trackerX >= boxLeft && trackerX <= boxRight && trackerY >= boxTop && trackerY <= boxBottom;
+
+                if (gameConfig.gameState === 'playing' && isColliding && isInteracting) {
                     evaluateInteractiveChomp(wordObj, trackerX, trackerY);
                 }
             });
@@ -1917,26 +1970,25 @@
 
         // COUNTDOWN STATE ONLY LOOP
         function runCountdownOnlyLoop() {
-            // Words continue to glide around smoothly in the background, but are completely NOT interactive
             activeWords.forEach(wordObj => {
                 wordObj.x += wordObj.vx;
                 wordObj.y += wordObj.vy;
 
                 if (wordObj.x < 50) { wordObj.x = 50; wordObj.vx *= -1; }
-                if (wordObj.x > canvasElement.width - 120) { wordObj.x = canvasElement.width - 120; wordObj.vx *= -1; }
+                if (wordObj.x > canvasElement.width - 180) { wordObj.x = canvasElement.width - 180; wordObj.vx *= -1; }
                 if (wordObj.y < 220) { wordObj.y = 220; wordObj.vy *= -1; }
-                if (wordObj.y > canvasElement.height - 50) { wordObj.y = canvasElement.height - 50; wordObj.vy *= -1; }
+                if (wordObj.y > canvasElement.height - 60) { wordObj.y = canvasElement.height - 60; wordObj.vy *= -1; }
 
                 canvasCtx.save();
-                canvasCtx.font = 'bold 45px sans-serif';
-                canvasCtx.shadowColor = "black";
-                canvasCtx.shadowBlur = 10;
-                canvasCtx.fillStyle = "rgba(255, 255, 255, 0.4)"; // dim down inactive words
+                canvasCtx.font = 'bold 45px "STKaiti", "KaiTi", sans-serif';
+                const textWidth = canvasCtx.measureText(wordObj.word).width;
+                canvasCtx.fillStyle = 'rgba(15, 23, 42, 0.4)';
+                canvasCtx.fillRect(wordObj.x - 10, wordObj.y - 45, textWidth + 20, 60);
+                canvasCtx.fillStyle = "rgba(255, 255, 255, 0.4)";
                 canvasCtx.fillText(wordObj.word, wordObj.x, wordObj.y);
                 canvasCtx.restore();
             });
 
-            // Clean particles updater
             particles.forEach((p, idx) => {
                 p.update();
                 p.draw(canvasCtx);
@@ -1948,14 +2000,12 @@
             const popup = document.getElementById('feedbackPopup');
             
             if (wordObj.word === targetWordObj.word) {
-                // ADD POINTS strictly to Vocabulary progression score!
                 gameConfig.score += 10;
                 
-                // CHANGED: Vocal and sound feedbacks separation based on mode
                 if (gameConfig.selectedControl === 'eat') {
-                    playChompVoice(true); // Says just "好吃！" (Simplified)
+                    playChompVoice(true); 
                 } else {
-                    AudioEngine.playHit(); // Retro retro chime
+                    AudioEngine.playHit(); 
                 }
                 
                 registerMasteredWord(wordObj);
@@ -1966,14 +2016,10 @@
 
                 popup.innerText = "YUMMY! 😋 正确";
                 popup.className = "absolute text-5xl font-extrabold text-green-500 scale-125 z-30 pointer-events-none drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]";
-                
-                // INTRODUCED TRANSITION PAUSE: Game freezes briefly (1.2 seconds) to let child close their mouth
-                // (During this, the game rule timer interval does not decrement because gameState !== 'playing')
                 gameConfig.gameState = 'transition_pause';
 
                 setTimeout(() => {
                     const vocabulary = vocabularyDatabase[gameConfig.selectedLevel]?.[gameConfig.selectedStream] || vocabularyDatabase['P5']['standard'];
-                    
                     const activeWordStrings = activeWords.map(w => w.word);
                     let freshWord = vocabulary[Math.floor(Math.random() * vocabulary.length)];
                     
@@ -1986,10 +2032,9 @@
                     wordObj.word = freshWord.word;
                     wordObj.pinyin = freshWord.pinyin;
                     wordObj.translation = freshWord.translation;
-                    wordObj.x = Math.random() * (canvasElement.width - 200) + 100;
-                    wordObj.y = Math.random() * (canvasElement.height - 250) + 200;
+                    wordObj.x = Math.random() * (canvasElement.width - 250) + 100;
+                    wordObj.y = Math.random() * (canvasElement.height - 300) + 250;
                     
-                    // Fixed Speed scale of 5 remains constant
                     const baseSpeed = 5;
                     wordObj.vx = (Math.random() - 0.5) * baseSpeed;
                     wordObj.vy = (Math.random() - 0.5) * baseSpeed;
@@ -2006,26 +2051,22 @@
                     gameConfig.gameLevel = Math.floor(gameConfig.score / 50) + 1;
                     document.getElementById('gameLevelDisplay').innerText = gameConfig.gameLevel;
 
-                    // LEVEL-UP CELEBRATION! Check level transition
                     if (gameConfig.gameLevel > prevLevel) {
                         triggerLevelUpCelebrationAndBonus();
                     } else {
                         gameConfig.gameState = 'playing';
                         pickNewTargetWord();
                     }
-                }, 1200); // 1.2s brief paused transition breather
+                }, 1200);
 
             } else {
                 gameConfig.score = Math.max(0, gameConfig.score - 5);
-                
-                // CHANGED: Vocal and synth feedbacks on incorrect
                 if (gameConfig.selectedControl === 'eat') {
-                    playChompVoice(false); // Says just "难吃！" (Simplified)
+                    playChompVoice(false); 
                 } else {
-                    AudioEngine.playMiss(); // Flat retro synth
+                    AudioEngine.playMiss(); 
                 }
                 
-                // Track mistakes uniquely to sidebar mistakes panel
                 registerMistakeWord(targetWordObj);
 
                 popup.innerText = "YUCKY! 🤢 错误";
@@ -2043,62 +2084,48 @@
             document.getElementById('scoreDisplay').innerText = gameConfig.score;
             
             popup.style.transform = "scale(1)";
-            setTimeout(() => {
-                popup.style.transform = "scale(0)";
-            }, 800);
+            setTimeout(() => { popup.style.transform = "scale(0)"; }, 800);
             
             pointerPos.clicked = false;
             mouthPosition.isOpen = false;
         }
 
-        // CELEBRATION FLOW: Trigger glowing star overlay with explosion confetti
+        // CELEBRATION FLOW
         function triggerLevelUpCelebrationAndBonus() {
             gameConfig.gameState = 'celebration';
-            
-            // Populate celebration metadata text
             document.getElementById('celebLevelText').innerText = gameConfig.gameLevel;
             
             const overlay = document.getElementById('levelUpOverlay');
             overlay.classList.remove('hidden');
             overlay.style.display = "flex";
 
-            // Spawn explosive bursts of beautiful digital confetti particles
             confetti = [];
             for (let i = 0; i < 110; i++) {
                 confetti.push(new Confetti(window.innerWidth / 2, window.innerHeight / 2 + 50));
             }
 
-            // Play rewarding fanfare scale chords
             AudioEngine.playLevelUp();
 
-            // Run celebration loops inside canvas
             function runCelebConfettiLoop() {
                 if (gameConfig.gameState !== 'celebration') return;
-                
                 canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-                
-                // Confetti updating
                 confetti.forEach((c, idx) => {
                     c.update();
                     c.draw(canvasCtx);
                     if (c.alpha <= 0) confetti.splice(idx, 1);
                 });
-
                 requestAnimationFrame(runCelebConfettiLoop);
             }
             runCelebConfettiLoop();
 
-            // Retain congratulatory banner temporarily for 2.5 seconds, then launch Gold Rush mini-game
             setTimeout(() => {
                 overlay.classList.add('hidden');
                 overlay.style.display = "none";
-                
-                // Regular milestone gold rush bonus level triggered automatically
                 triggerPandaGoldRushBonus();
             }, 2500);
         }
 
-        // LEVEL UP: "PANDA GOLD RUSH" MINI PRIZE GAME
+        // BONUS LEVEL TIME RUNNER
         let bonusSecondsLeft = 15;
         let bonusTimerInterval = null;
 
@@ -2113,8 +2140,6 @@
 
             document.getElementById('metricLabel').innerText = "时间 BONUS:";
             document.getElementById('metricDisplay').innerText = bonusSecondsLeft;
-            
-            // Show separated Coins element during Gold Rush
             document.getElementById('coinCard').classList.remove('hidden');
 
             clearInterval(timerInterval);
@@ -2132,7 +2157,6 @@
 
         function runGoldRushMiniGameLoop() {
             let targetX = 0;
-
             if (gameConfig.selectedControl === 'eat') {
                 targetX = mouthPosition.x;
             } else {
@@ -2163,21 +2187,16 @@
                 if (item.y + item.radius >= basketTop && item.y - item.radius <= basketPosition.y + basketPosition.height / 2) {
                     if (item.x >= basketLeft && item.x <= basketRight) {
                         fallingItems.splice(i, 1);
-                        
                         if (item.isBomb) {
-                            // Deduct strictly from coins, avoiding points progression deflation!
                             gameConfig.coins = Math.max(0, gameConfig.coins - 2);
                             AudioEngine.playExplosion();
                             triggerScreenShake();
-                            
                             for (let p = 0; p < 12; p++) {
                                 particles.push(new Particle(item.x, item.y, "🔥", "#f97316"));
                             }
                         } else {
-                            // Accumulate coins separately from points (preventing progression exploits)
                             gameConfig.coins += 1;
                             AudioEngine.playCoin();
-                            
                             for (let p = 0; p < 6; p++) {
                                 particles.push(new Particle(item.x, item.y, "✨", "#eab308"));
                             }
@@ -2197,13 +2216,7 @@
             
             canvasCtx.fillStyle = '#854d0e'; 
             canvasCtx.beginPath();
-            canvasCtx.roundRect(
-                -basketPosition.width / 2, 
-                -basketPosition.height / 2, 
-                basketPosition.width, 
-                basketPosition.height, 
-                [0, 0, 16, 16]
-            );
+            canvasCtx.roundRect(-basketPosition.width / 2, -basketPosition.height / 2, basketPosition.width, basketPosition.height, [0, 0, 16, 16]);
             canvasCtx.fill();
             canvasCtx.lineWidth = 4;
             canvasCtx.strokeStyle = '#451a03';
@@ -2219,18 +2232,8 @@
             canvasCtx.stroke();
 
             canvasCtx.fillStyle = '#b45309';
-            canvasCtx.fillRect(
-                -basketPosition.width / 2 - 4, 
-                -basketPosition.height / 2 - 4, 
-                basketPosition.width + 8, 
-                8
-            );
-            canvasCtx.strokeRect(
-                -basketPosition.width / 2 - 4, 
-                -basketPosition.height / 2 - 4, 
-                basketPosition.width + 8, 
-                8
-            );
+            canvasCtx.fillRect(-basketPosition.width / 2 - 4, -basketPosition.height / 2 - 4, basketPosition.width + 8, 8);
+            canvasCtx.strokeRect(-basketPosition.width / 2 - 4, -basketPosition.height / 2 - 4, basketPosition.width + 8, 8);
             
             canvasCtx.fillStyle = '#ffffff';
             canvasCtx.beginPath();
@@ -2245,7 +2248,6 @@
             canvasCtx.arc(-8, -4, 4, 0, Math.PI * 2);
             canvasCtx.arc(8, -4, 4, 0, Math.PI * 2);
             canvasCtx.fill();
-            
             canvasCtx.restore();
 
             particles.forEach((p, idx) => {
@@ -2255,7 +2257,6 @@
             });
         }
 
-        // Post Mini-Game safety buffer countdown to prevent accidental wrong touches
         function initiatePostGameSafetyCountdown() {
             gameConfig.gameState = 'countdown';
             document.getElementById('coinCard').classList.add('hidden');
@@ -2267,8 +2268,6 @@
             let countdownSeconds = 3;
             const textElement = document.getElementById('countdownNumber');
             textElement.innerText = countdownSeconds;
-            
-            // Beep audio indicator
             AudioEngine.playCountdownBeep(true);
 
             const interval = setInterval(() => {
@@ -2290,9 +2289,8 @@
 
         function returnToVocabularyPractice() {
             gameConfig.gameState = 'playing';
-            
             if (gameConfig.selectedRule === 'timed') {
-                gameConfig.metricVal = 30; // extension breather timer
+                gameConfig.metricVal = 30; 
                 document.getElementById('metricLabel').innerText = "时间 TIMER:";
                 document.getElementById('metricDisplay').innerText = gameConfig.metricVal;
                 
@@ -2309,30 +2307,24 @@
             }
 
             pickNewTargetWord();
-            if (gameConfig.selectedControl !== 'eat') {
-                start2DAnimationLoop(); // Restart loop
-            }
+            if (gameConfig.selectedControl !== 'eat') start2DAnimationLoop();
         }
 
         // ADD CHOMPED VOCABULARY CARD TO SIDEBAR DRAWER
         function registerMasteredWord(wordObj) {
             if (gameConfig.masteredWords.has(wordObj.word)) return;
-            
             gameConfig.masteredWords.add(wordObj.word);
             document.getElementById('countCorrect').innerText = gameConfig.masteredWords.size;
             
             const historyList = document.getElementById('historyCorrectList');
             const emptyHistoryMsg = document.getElementById('emptyHistoryMsg');
-            
-            if (emptyHistoryMsg) {
-                emptyHistoryMsg.remove();
-            }
+            if (emptyHistoryMsg) emptyHistoryMsg.remove();
 
             const item = document.createElement('div');
             item.className = "bg-stone-900 p-3 rounded-xl border-2 border-green-500 shadow-sm flex items-center justify-between bounce-hover transition-all text-white";
             item.innerHTML = `
                 <div>
-                    <h4 class="text-xl font-bold text-green-400">${wordObj.word}</h4>
+                    <h4 class="text-xl font-bold text-green-400" style="font-family: 'KaiTi', serif;">${wordObj.word}</h4>
                     <p class="text-xs text-stone-400">${wordObj.pinyin}</p>
                     <p class="text-sm text-stone-300 font-semibold">${wordObj.translation}</p>
                 </div>
@@ -2346,22 +2338,18 @@
         // ADD INCORRECT ATTEMPTS TO MISTAKES DRAWER
         function registerMistakeWord(wordObj) {
             if (gameConfig.mistakeWords.has(wordObj.word)) return;
-
             gameConfig.mistakeWords.add(wordObj.word);
             document.getElementById('countWrong').innerText = gameConfig.mistakeWords.size;
 
             const wrongList = document.getElementById('historyWrongList');
             const emptyWrongMsg = document.getElementById('emptyWrongMsg');
-
-            if (emptyWrongMsg) {
-                emptyWrongMsg.remove();
-            }
+            if (emptyWrongMsg) emptyWrongMsg.remove();
 
             const item = document.createElement('div');
             item.className = "bg-stone-900 p-3 rounded-xl border-2 border-red-500 shadow-sm flex items-center justify-between bounce-hover transition-all text-white";
             item.innerHTML = `
                 <div>
-                    <h4 class="text-xl font-bold text-red-400">${wordObj.word}</h4>
+                    <h4 class="text-xl font-bold text-red-400" style="font-family: 'KaiTi', serif;">${wordObj.word}</h4>
                     <p class="text-xs text-stone-400">${wordObj.pinyin}</p>
                     <p class="text-sm text-stone-300 font-semibold">${wordObj.translation}</p>
                 </div>
@@ -2375,7 +2363,6 @@
         // FINAL GAME OVER SCREEN
         function endGame() {
             stopGameAndTracking();
-            
             document.getElementById('gameArea').classList.add('hidden');
             document.getElementById('gameOverScreen').classList.remove('hidden');
             

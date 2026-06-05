@@ -3,214 +3,2085 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Word Eater: Primary School Chinese Series</title>
-    
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+    <title>华文欢乐大闯关 - Chinese Word Arcade Deluxe</title>
+    <!-- Tailwind CSS for rich, playful, and responsive user interfaces -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for cartoon-style UI icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- MediaPipe Face Mesh & Camera Utilities loaded securely via CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
     <style>
-        :root {
-            --p1: #ff4757; --p2: #ffa502; --p3: #2ed573;
-            --p4: #1e90ff; --p5: #3742fa; --p6: #7d5fff;
+        @import url('https://fonts.googleapis.com/css2?family=ZCOOL_KuaiLe&family=Fredoka:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Fredoka', 'ZCOOL KuaiLe', sans-serif;
+            background: radial-gradient(circle, #ffeedd 0%, #ffccaa 100%);
+            user-select: none;
+            touch-action: manipulation;
         }
-        body { margin: 0; overflow: hidden; background: #000; font-family: sans-serif; color: white; }
-        
-        /* Menu Screen */
-        #menu {
-            position: absolute; inset: 0; z-index: 100;
-            background: radial-gradient(circle at center, #1e272e, #000);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        .comic-border {
+            border: 4px solid #4a3728;
+            box-shadow: 4px 4px 0px #4a3728;
         }
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px; }
-        .lvl-btn {
-            width: 120px; height: 120px; border-radius: 20px; border: none;
-            color: white; font-size: 32px; font-weight: bold; cursor: pointer;
-            transition: 0.2s; box-shadow: 0 8px 0 rgba(0,0,0,0.3);
+        .comic-shadow {
+            box-shadow: 6px 6px 0px #4a3728;
         }
-        .lvl-btn:hover { transform: scale(1.1); filter: brightness(1.2); }
-        .lvl-btn:active { transform: translateY(4px); box-shadow: none; }
-
-        /* Game HUD */
-        #hud {
-            position: absolute; top: 0; width: 100%; display: flex; 
-            flex-direction: column; align-items: center; z-index: 50; pointer-events: none;
+        .bounce-hover:hover {
+            transform: scale(1.05) rotate(-1deg);
         }
-        #target-box {
-            background: rgba(0,0,0,0.85); padding: 15px 50px;
-            border-radius: 0 0 30px 30px; border: 4px solid white;
-            font-size: 60px; color: #fff; text-shadow: 0 0 15px #000;
+        /* Elegant styled scrollbar for mastered vocabulary sidebar */
+        ::-webkit-scrollbar {
+            width: 8px;
         }
-        #score-box {
-            background: rgba(0,0,0,0.6); padding: 8px 25px; border-radius: 50px;
-            margin-top: 10px; font-size: 24px; border: 1px solid rgba(255,255,255,0.3);
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 10px;
         }
-
-        canvas { display: block; width: 100vw; height: 100vh; }
-        video { display: none; }
-        .hidden { display: none !important; }
+        ::-webkit-scrollbar-thumb {
+            background: #f97316;
+            border-radius: 10px;
+        }
+        /* Animation frame shakes for bomb explosions */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(0px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            55% { transform: translate(-1px, 2px) rotate(-1deg); }
+            70% { transform: translate(-3px, 1px) rotate(0deg); }
+            85% { transform: translate(2px, 1px) rotate(-1deg); }
+            100% { transform: translate(1px, -2px) rotate(0deg); }
+        }
+        .shake-screen {
+            animation: shake 0.4s;
+            animation-iteration-count: infinite;
+        }
     </style>
 </head>
-<body>
+<body class="w-screen h-screen overflow-hidden flex flex-col justify-between">
 
-<div id="menu">
-    <h1 style="font-size: 50px; margin-bottom: 0;">WORD EATER 👄</h1>
-    <p style="color: #888; margin-bottom: 30px;">Singapore Primary Chinese Syllabus (600 Words)</p>
-    <div class="grid">
-        <button class="lvl-btn" style="background:var(--p1)" onclick="initGame('P1')">P1</button>
-        <button class="lvl-btn" style="background:var(--p2)" onclick="initGame('P2')">P2</button>
-        <button class="lvl-btn" style="background:var(--p3)" onclick="initGame('P3')">P3</button>
-        <button class="lvl-btn" style="background:var(--p4)" onclick="initGame('P4')">P4</button>
-        <button class="lvl-btn" style="background:var(--p5)" onclick="initGame('P5')">P5</button>
-        <button class="lvl-btn" style="background:var(--p6)" onclick="initGame('P6')">P6</button>
+    <!-- TOP NAVIGATION HEADER -->
+    <header class="w-full bg-orange-500 text-white border-b-4 border-amber-950 p-4 flex justify-between items-center z-30 shadow-md">
+        <div class="flex items-center space-x-3">
+            <span class="text-4xl">🐼</span>
+            <div>
+                <h1 class="text-2xl md:text-3xl font-extrabold tracking-wide text-yellow-200" style="font-family: 'ZCOOL KuaiLe', sans-serif;">
+                    华文欢乐大闯关 <span class="text-lg text-white font-normal">Chinese Word Arcade Deluxe</span>
+                </h1>
+            </div>
+        </div>
+        <div class="flex items-center space-x-3">
+            <button id="toggleHistoryBtn" class="bg-amber-600 hover:bg-amber-700 px-4 py-2 rounded-full border-2 border-white font-semibold text-sm transition-all shadow">
+                <i class="fa-solid fa-trophy mr-1 text-yellow-300"></i> 成就榜 History
+            </button>
+            <button id="muteBtn" class="bg-white text-orange-600 hover:bg-orange-100 p-3 rounded-full border-2 border-orange-600 w-12 h-12 flex items-center justify-center transition-all shadow">
+                <i id="muteIcon" class="fa-solid fa-volume-high text-lg"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- CORE INTERACTIVE BOX -->
+    <main id="mainContainer" class="relative flex-1 w-full max-w-7xl mx-auto p-4 flex flex-col items-center justify-center">
+        
+        <!-- SETUP CONFIGURATION BOARD -->
+        <section id="setupScreen" class="w-full max-w-4xl bg-white rounded-3xl p-6 md:p-8 comic-border comic-shadow flex flex-col items-center space-y-6 z-20 overflow-y-auto max-h-[80vh]">
+            <h2 class="text-3xl md:text-4xl text-orange-600 font-extrabold text-center">🏆 全级华文大闯关：选择你的关卡</h2>
+            <p class="text-stone-600 text-center text-sm md:text-base">Comprehensive P1 to P6 Chinese Syllabus with Cumulative Recaps (Over 700 Words!)</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                <!-- Level and Stream Selection Group -->
+                <div class="space-y-4 bg-orange-50 p-4 rounded-2xl border-2 border-orange-200">
+                    <h3 class="text-lg font-bold text-orange-800"><i class="fa-solid fa-graduation-cap mr-2"></i>1. 课程与年级 Class Setup</h3>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-stone-700 mb-1">选择年级 Primary Level:</label>
+                        <div class="grid grid-cols-3 gap-2" id="levelGroup">
+                            <button class="level-btn py-2 px-3 bg-white text-stone-700 border-2 border-stone-300 rounded-xl font-bold transition-all text-sm hover:border-orange-500" data-val="P1">P1 一年级</button>
+                            <button class="level-btn py-2 px-3 bg-white text-stone-700 border-2 border-stone-300 rounded-xl font-bold transition-all text-sm hover:border-orange-500" data-val="P2">P2 二年级</button>
+                            <button class="level-btn py-2 px-3 bg-white text-stone-700 border-2 border-stone-300 rounded-xl font-bold transition-all text-sm hover:border-orange-500" data-val="P3">P3 三年级</button>
+                            <button class="level-btn py-2 px-3 bg-white text-stone-700 border-2 border-stone-300 rounded-xl font-bold transition-all text-sm hover:border-orange-500" data-val="P4">P4 四年级</button>
+                            <button class="level-btn py-2 px-3 bg-orange-500 text-white ring-4 ring-orange-300 border-orange-600 scale-105 shadow-md rounded-xl font-bold transition-all text-sm" data-val="P5">P5 五年级</button>
+                            <button class="level-btn py-2 px-3 bg-white text-stone-700 border-2 border-stone-300 rounded-xl font-bold transition-all text-sm hover:border-orange-500" data-val="P6">P6 六年级</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-stone-700 mb-1">选择课程 Stream:</label>
+                        <div class="grid grid-cols-2 gap-2" id="streamGroup">
+                            <button class="stream-btn py-2 px-4 bg-orange-500 text-white ring-4 ring-orange-300 border-orange-600 scale-105 shadow-md rounded-xl font-bold transition-all text-sm" data-val="standard">普通华文 Standard</button>
+                            <button class="stream-btn py-2 px-4 bg-white text-stone-700 border-2 border-stone-300 rounded-xl font-bold transition-all text-sm hover:border-orange-500" data-val="higher">高级华文 Higher</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input and Mode Selection Group -->
+                <div class="space-y-4 bg-amber-50 p-4 rounded-2xl border-2 border-amber-200">
+                    <h3 class="text-lg font-bold text-amber-800"><i class="fa-solid fa-gamepad mr-2"></i>2. 玩法与挑战 Game Modes</h3>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-stone-700 mb-1">控制模式 Interaction:</label>
+                        <div class="grid grid-cols-2 gap-2" id="controlGroup">
+                            <button class="control-btn py-3 px-4 bg-orange-500 text-white ring-4 ring-orange-300 border-orange-600 scale-105 shadow-md rounded-xl font-bold transition-all text-sm flex flex-col items-center justify-center" data-val="eat">
+                                <span class="text-xl mb-1">👄</span>
+                                <span>张嘴吃字 Mouth Eater</span>
+                            </button>
+                            <button class="control-btn py-3 px-4 bg-white text-stone-700 border-2 border-stone-300 rounded-xl font-bold transition-all text-sm flex flex-col items-center justify-center hover:border-orange-500" data-val="tap">
+                                <span class="text-xl mb-1">🖱️</span>
+                                <span>点击射击 Click / Tap</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-stone-700 mb-1">规则模式 Game Rule:</label>
+                        <div class="grid grid-cols-3 gap-2" id="ruleGroup">
+                            <button class="rule-btn py-2 px-2 bg-orange-500 text-white ring-4 ring-orange-300 border-orange-600 scale-105 shadow-md rounded-xl font-bold transition-all text-xs" data-val="timed">
+                                ⏱️ 计时 60s
+                            </button>
+                            <button class="rule-btn py-2 px-2 bg-white text-stone-700 border-2 border-stone-300 rounded-xl font-bold transition-all text-xs hover:border-orange-500" data-val="points">
+                                🎯 积分 150pt
+                            </button>
+                            <button class="rule-btn py-2 px-2 bg-white text-stone-700 border-2 border-stone-300 rounded-xl font-bold transition-all text-xs hover:border-orange-500" data-val="unlimited">
+                                ♾️ 无限休闲
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button id="startGameBtn" class="w-full max-w-sm py-4 bg-green-500 hover:bg-green-600 text-white text-2xl font-black rounded-2xl comic-border bounce-hover transition-all tracking-wider shadow-lg">
+                开 始 游 戏 START!
+            </button>
+        </section>
+
+        <!-- GAME PLAY AREA -->
+        <section id="gameArea" class="hidden relative w-full h-[65vh] md:h-[70vh] bg-stone-900 rounded-3xl overflow-hidden comic-border flex items-center justify-center">
+            
+            <!-- Camera Video Stream -->
+            <video id="webcam" class="absolute w-full h-full object-cover scale-x-[-1] hidden pointer-events-none" autoplay playsinline></video>
+            
+            <!-- Graphics Overlay Canvas -->
+            <canvas id="gameCanvas" class="absolute w-full h-full z-10 cursor-crosshair"></canvas>
+
+            <!-- Loading camera overlay state -->
+            <div id="cameraLoading" class="absolute inset-0 bg-stone-950 bg-opacity-90 flex flex-col items-center justify-center text-white space-y-4 z-20">
+                <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-orange-500"></div>
+                <h3 class="text-xl font-bold">📷 正在启动前置摄像头...</h3>
+                <p class="text-sm text-stone-400">Loading tracking system, please allow webcam access.</p>
+            </div>
+
+            <!-- HUD Dashboard Overlay -->
+            <div class="absolute top-4 left-4 right-4 flex justify-between items-start z-20 pointer-events-none">
+                <!-- Word Target Placard Card -->
+                <div class="bg-white rounded-2xl p-4 border-4 border-amber-950 shadow-md max-w-xs md:max-w-md pointer-events-auto flex items-center space-x-3">
+                    <div>
+                        <p id="placardCategory" class="text-xs text-orange-600 font-bold uppercase tracking-widest">根据拼音找出词语 Find by Pinyin:</p>
+                        <h2 id="targetWordText" class="text-3xl md:text-4xl font-extrabold text-stone-900 leading-tight">加载中...</h2>
+                        <p id="targetWordTranslation" class="text-sm text-stone-600 font-semibold italic">...</p>
+                    </div>
+                    <button id="speakTargetBtn" class="bg-orange-500 hover:bg-orange-600 text-white rounded-xl p-3 shadow border-2 border-orange-600 transition-all">
+                        <i class="fa-solid fa-volume-high text-lg"></i>
+                    </button>
+                </div>
+
+                <!-- Game Stats Panel -->
+                <div class="flex flex-col space-y-2 pointer-events-auto">
+                    <div class="bg-white rounded-2xl py-2 px-4 border-4 border-amber-950 shadow-md flex justify-between items-center space-x-4">
+                        <span class="text-stone-600 font-bold text-sm">分数 SCORE:</span>
+                        <span id="scoreDisplay" class="text-3xl font-extrabold text-green-600">0</span>
+                    </div>
+                    <div id="metricCard" class="bg-white rounded-2xl py-2 px-4 border-4 border-amber-950 shadow-md flex justify-between items-center space-x-4">
+                        <span id="metricLabel" class="text-stone-600 font-bold text-sm">时间 TIMER:</span>
+                        <span id="metricDisplay" class="text-3xl font-extrabold text-blue-600">60</span>
+                    </div>
+                    <div class="bg-white rounded-2xl py-2 px-4 border-4 border-amber-950 shadow-md flex justify-between items-center space-x-4">
+                        <span class="text-stone-600 font-bold text-sm">等级 LEVEL:</span>
+                        <span id="gameLevelDisplay" class="text-3xl font-extrabold text-orange-500">1</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Eat Evaluation Popups -->
+            <div id="feedbackPopup" class="absolute text-5xl font-extrabold text-center text-white scale-0 transition-transform duration-300 z-30 pointer-events-none drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]">
+                YUMMY! 😋
+            </div>
+        </section>
+
+        <!-- GAME OVER BOARD -->
+        <section id="gameOverScreen" class="hidden w-full max-w-xl bg-white rounded-3xl p-8 comic-border comic-shadow flex flex-col items-center text-center space-y-6 z-20">
+            <h2 id="endTitle" class="text-4xl text-orange-600 font-extrabold">🏆 精彩极了！</h2>
+            <p id="endSubtitle" class="text-stone-600 text-lg">你完成了一场极佳的华文挑战。</p>
+            
+            <div class="bg-orange-50 p-6 rounded-2xl border-2 border-orange-200 w-full grid grid-cols-2 gap-4">
+                <div>
+                    <p class="text-stone-500 text-sm">最终分数 Final Score</p>
+                    <h3 id="endScore" class="text-4xl font-extrabold text-orange-600">120</h3>
+                </div>
+                <div>
+                    <p class="text-stone-500 text-sm">掌握词汇 Mastered Words</p>
+                    <h3 id="endMasteredCount" class="text-4xl font-extrabold text-green-600">8</h3>
+                </div>
+            </div>
+
+            <div class="flex space-x-4 w-full">
+                <button id="replayBtn" class="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl border-b-4 border-green-700 transition-all">
+                    再玩一次 Replay
+                </button>
+                <button id="toMenuBtn" class="flex-1 py-3 bg-stone-500 hover:bg-stone-600 text-white font-bold rounded-xl border-b-4 border-stone-700 transition-all">
+                    返回菜单 Menu
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- SLIDE-OUT PANEL FOR ARCHIVED WORD HISTORY -->
+    <div id="historyDrawer" class="fixed right-0 top-0 bottom-0 w-80 bg-stone-50 border-l-4 border-amber-950 z-40 transform translate-x-full transition-transform duration-300 flex flex-col">
+        <div class="bg-orange-500 text-white p-4 border-b-4 border-amber-950 flex justify-between items-center">
+            <h3 class="font-black text-xl"><i class="fa-solid fa-trophy mr-2 text-yellow-300"></i>我掌握的词语</h3>
+            <button id="closeDrawerBtn" class="text-white hover:text-orange-200 text-2xl"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="historyList" class="flex-1 overflow-y-auto p-4 space-y-3">
+            <!-- Placeholders for words eaten correctly -->
+            <p id="emptyHistoryMsg" class="text-stone-400 text-center py-8">目前还没有掌握词汇，开始游戏吞掉它们吧！</p>
+        </div>
     </div>
-</div>
 
-<div id="hud" class="hidden">
-    <div id="target-box">---</div>
-    <div id="score-box">Score: 0</div>
-</div>
+    <!-- FOOTER COPYRIGHT SECTION -->
+    <footer class="w-full text-center py-2 text-xs text-stone-500 font-medium bg-amber-50 border-t-2 border-orange-200">
+        Aligns directly with Ministry of Education (MOE) Singapore Chinese Curriculums. Designed for interactive revision.
+    </footer>
 
-<video id="webcam" playsinline></video>
-<canvas id="gameCanvas"></canvas>
+    <script>
+        // COMPREHENSIVE VOCABULARY DATABASE (At least 50+ rich exam words/phrases per sub-list, with Higher P4-P6 inheriting P1-P3 recaps)
+        const vocabularyDatabase = {
+            'P1': {
+                'standard': [
+                    { word: "学校", pinyin: "xué xiào", translation: "School" },
+                    { word: "老师", pinyin: "lǎo shī", translation: "Teacher" },
+                    { word: "朋友", pinyin: "péng you", translation: "Friend" },
+                    { word: "欢喜", pinyin: "huān xǐ", translation: "Joyful" },
+                    { word: "读书", pinyin: "dú shū", translation: "Read/Study" },
+                    { word: "写字", pinyin: "xiě zì", translation: "Write characters" },
+                    { word: "再见", pinyin: "zài jiàn", translation: "Goodbye" },
+                    { word: "谢谢", pinyin: "xiè xie", translation: "Thank you" },
+                    { word: "太阳", pinyin: "tài yáng", translation: "Sun" },
+                    { word: "月亮", pinyin: "yuè liang", translation: "Moon" },
+                    { word: "生日", pinyin: "shēng rì", translation: "Birthday" },
+                    { word: "苹果", pinyin: "píng guǒ", translation: "Apple" },
+                    { word: "唱歌", pinyin: "chàng gē", translation: "Sing" },
+                    { word: "小鸟", pinyin: "xiǎo niǎo", translation: "Little bird" },
+                    { word: "花朵", pinyin: "huā duǒ", translation: "Flower" },
+                    { word: "喝水", pinyin: "hē shuǐ", translation: "Drink water" },
+                    { word: "喜欢", pinyin: "xǐ huan", translation: "Like" },
+                    { word: "身体", pinyin: "shēn tǐ", translation: "Body" },
+                    { word: "眼睛", pinyin: "yǎn jing", translation: "Eyes" },
+                    { word: "嘴巴", pinyin: "zuǐ ba", translation: "Mouth" },
+                    { word: "双手", pinyin: "shuāng shǒu", translation: "Both hands" },
+                    { word: "操场", pinyin: "cāo chǎng", translation: "Playground" },
+                    { word: "跑步", pinyin: "pǎo bù", translation: "Run" },
+                    { word: "睡觉", pinyin: "shuì jiào", translation: "Sleep" },
+                    { word: "衣服", pinyin: "yī fu", translation: "Clothes" },
+                    { word: "书包", pinyin: "shū bāo", translation: "Schoolbag" },
+                    { word: "玩具", pinyin: "wán jù", translation: "Toy" },
+                    { word: "气球", pinyin: "qì qiú", translation: "Balloon" },
+                    { word: "尾巴", pinyin: "wěi ba", translation: "Tail" },
+                    { word: "美丽", pinyin: "měi lì", translation: "Beautiful" },
+                    { word: "铅笔", pinyin: "qiān bǐ", translation: "Pencil" },
+                    { word: "橡皮", pinyin: "xiàng pí", translation: "Eraser" },
+                    { word: "桌子", pinyin: "zhuō zi", translation: "Table" },
+                    { word: "椅子", pinyin: "yǐ zi", translation: "Chair" },
+                    { word: "教室", pinyin: "jiào shì", translation: "Classroom" },
+                    { word: "同学", pinyin: "tóng xué", translation: "Classmate" },
+                    { word: "爸爸", pinyin: "bà ba", translation: "Father" },
+                    { word: "妈妈", pinyin: "mā ma", translation: "Mother" },
+                    { word: "爷爷", pinyin: "yé ye", translation: "Grandfather" },
+                    { word: "奶奶", pinyin: "nǎi nai", translation: "Grandmother" },
+                    { word: "哥哥", pinyin: "gē ge", translation: "Elder brother" },
+                    { word: "姐姐", pinyin: "jiě jie", translation: "Elder sister" },
+                    { word: "弟弟", pinyin: "dì di", translation: "Younger brother" },
+                    { word: "妹妹", pinyin: "mèi mei", translation: "Younger sister" },
+                    { word: "早上", pinyin: "zǎo shang", translation: "Morning" },
+                    { word: "晚上", pinyin: "wǎn shang", translation: "Night" },
+                    { word: "吃饭", pinyin: "chī fàn", translation: "Eat meals" },
+                    { word: "水果", pinyin: "shuǐ guǒ", translation: "Fruits" },
+                    { word: "西瓜", pinyin: "xī guā", translation: "Watermelon" },
+                    { word: "绿草", pinyin: "lǜ cǎo", translation: "Green grass" }
+                ],
+                'higher': [
+                    { word: "铅笔", pinyin: "qiān bǐ", translation: "Pencil" },
+                    { word: "游戏", pinyin: "yóu xì", translation: "Game" },
+                    { word: "懂事", pinyin: "dǒng shì", translation: "Sensible" },
+                    { word: "感谢", pinyin: "gǎn xiè", translation: "Thankful" },
+                    { word: "认真", pinyin: "rèn zhēn", translation: "Seriousness/Diligent" },
+                    { word: "遵守", pinyin: "zūn shǒu", translation: "Obide by" },
+                    { word: "礼貌", pinyin: "lǐ mào", translation: "Polite" },
+                    { word: "帮助", pinyin: "bāng zhù", translation: "Help" },
+                    { word: "诚实", pinyin: "chéng shí", translation: "Honest" },
+                    { word: "努力", pinyin: "nǔ lì", translation: "Hardworking" },
+                    { word: "勇敢", pinyin: "yǒng gǎn", translation: "Brave" },
+                    { word: "习惯", pinyin: "xí guàn", translation: "Habit" },
+                    { word: "分享", pinyin: "fēn xiǎng", translation: "Share" },
+                    { word: "合作", pinyin: "hé zuò", translation: "Cooperate" },
+                    { word: "关心", pinyin: "guān xīn", translation: "Care/Concern" },
+                    { word: "讲道理", pinyin: "jiǎng dào li", translation: "Be reasonable" },
+                    { word: "改正", pinyin: "gǎi zhèng", translation: "Correct" },
+                    { word: "保护", pinyin: "bǎo hù", translation: "Protect" },
+                    { word: "干净", pinyin: "gān jìng", translation: "Clean" },
+                    { word: "事情", pinyin: "shì qing", translation: "Matter/Business" },
+                    { word: "常常", pinyin: "cháng cháng", translation: "Often" },
+                    { word: "特别", pinyin: "tè bié", translation: "Special" },
+                    { word: "办法", pinyin: "bàn fǎ", translation: "Method/Way" },
+                    { word: "开始", pinyin: "kāi shǐ", translation: "Start" },
+                    { word: "庆祝", pinyin: "qìng zhù", translation: "Celebrate" },
+                    { word: "学习", pinyin: "xué xí", translation: "Learn/Study" },
+                    { word: "思考", pinyin: "sī kǎo", translation: "Think" },
+                    { word: "举手", pinyin: "jǔ shǒu", translation: "Raise hand" },
+                    { word: "听讲", pinyin: "tīng jiǎng", translation: "Listen to lecture" },
+                    { word: "发问", pinyin: "fā wèn", translation: "Ask a question" },
+                    { word: "迟到", pinyin: "chí dào", translation: "Late" },
+                    { word: "卫生", pinyin: "wèi shēng", translation: "Hygiene" },
+                    { word: "整齐", pinyin: "zhěng qí", translation: "Neat" },
+                    { word: "照顾", pinyin: "zhào gù", translation: "Take care of" },
+                    { word: "亲切", pinyin: "qīn qiè", translation: "Friendly" },
+                    { word: "客气", pinyin: "kè qi", translation: "Polite/Courteous" },
+                    { word: "谦虚", pinyin: "qiān xū", translation: "Humble" },
+                    { word: "骄傲", pinyin: "jiāo ào", translation: "Proud" },
+                    { word: "同意", pinyin: "tóng yì", translation: "Agree" },
+                    { word: "拒绝", pinyin: "jù jué", translation: "Refuse" },
+                    { word: "准备", pinyin: "zhǔn bèi", translation: "Prepare" },
+                    { word: "检查", pinyin: "jiǎn chá", translation: "Check" },
+                    { word: "注意", pinyin: "zhù yì", translation: "Pay attention" },
+                    { word: "安全", pinyin: "ān quán", translation: "Safe" },
+                    { word: "珍惜", pinyin: "zhēn xī", translation: "Cherish" },
+                    { word: "节约", pinyin: "jiē yuē", translation: "Save/Economize" },
+                    { word: "团结", pinyin: "tuán jié", translation: "Unite" },
+                    { word: "友爱", pinyin: "yǒu ài", translation: "Friendly love" },
+                    { word: "幸福", pinyin: "xìng fú", translation: "Happiness" },
+                    { word: "成功", pinyin: "chéng gōng", translation: "Success" }
+                ]
+            },
+            'P2': {
+                'standard': [
+                    { word: "事情", pinyin: "shì qing", translation: "Matter/Business" },
+                    { word: "干净", pinyin: "gān jìng", translation: "Clean" },
+                    { word: "总是", pinyin: "zǒng shì", translation: "Always" },
+                    { word: "经过", pinyin: "jīng guò", translation: "Pass through" },
+                    { word: "必须", pinyin: "bì xū", translation: "Must" },
+                    { word: "准备", pinyin: "zhǔn bèi", translation: "Prepare" },
+                    { word: "忽然", pinyin: "hū rán", translation: "Suddenly" },
+                    { word: "邻居", pinyin: "lín jū", translation: "Neighbor" },
+                    { word: "图书馆", pinyin: "tú shū guǎn", translation: "Library" },
+                    { word: "已经", pinyin: "yǐ jīng", translation: "Already" },
+                    { word: "应该", pinyin: "yīng gāi", translation: "Should" },
+                    { word: "发现", pinyin: "fā xiàn", translation: "Discover/Find" },
+                    { word: "方便", pinyin: "fāng biàn", translation: "Convenient" },
+                    { word: "互相", pinyin: "hù xiāng", translation: "Each other" },
+                    { word: "极了", pinyin: "jí le", translation: "Extremely" },
+                    { word: "帮忙", pinyin: "bāng máng", translation: "Help/Assist" },
+                    { word: "觉得", pinyin: "jué de", translation: "Feel/Think" },
+                    { word: "生气", pinyin: "shēng qì", translation: "Angry" },
+                    { word: "快乐", pinyin: "kuài lè", translation: "Happy" },
+                    { word: "公园", pinyin: "gōng yuán", translation: "Park" },
+                    { word: "扫地", pinyin: "sǎo dì", translation: "Sweep floor" },
+                    { word: "阿姨", pinyin: "ā yí", translation: "Auntie" },
+                    { word: "照顾", pinyin: "zhào gù", translation: "Take care of" },
+                    { word: "满意", pinyin: "mǎn yì", translation: "Satisfied" },
+                    { word: "健康", pinyin: "jiàn kāng", translation: "Healthy/Health" },
+                    { word: "安全", pinyin: "ān quán", translation: "Safe/Safety" },
+                    { word: "走路", pinyin: "zǒu lù", translation: "Walk" },
+                    { word: "时候", pinyin: "shí hou", translation: "Time" },
+                    { word: "正在", pinyin: "zhèng zài", translation: "Right now" },
+                    { word: "刚才", pinyin: "gāng cái", translation: "Just now" },
+                    { word: "以前", pinyin: "yǐ qián", translation: "Before" },
+                    { word: "以后", pinyin: "yǐ hòu", translation: "After" },
+                    { word: "常常", pinyin: "cháng cháng", translation: "Often" },
+                    { word: "玩耍", pinyin: "wán shuǎ", translation: "Play" },
+                    { word: "相信", pinyin: "xiāng xìn", translation: "Believe" },
+                    { word: "铅笔", pinyin: "qiān bǐ", translation: "Pencil" },
+                    { word: "写字", pinyin: "xiě zì", translation: "Write characters" },
+                    { word: "喜欢", pinyin: "xǐ huan", translation: "Like" },
+                    { word: "谢谢", pinyin: "xiè xie", translation: "Thank you" },
+                    { word: "学校", pinyin: "xué xiào", translation: "School" },
+                    { word: "身体", pinyin: "shēn tǐ", translation: "Body" },
+                    { word: "唱歌", pinyin: "chàng gē", translation: "Sing" },
+                    { word: "小鸟", pinyin: "xiǎo niǎo", translation: "Little bird" },
+                    { word: "花朵", pinyin: "huā duǒ", translation: "Flower" },
+                    { word: "睡觉", pinyin: "shuì jiào", translation: "Sleep" },
+                    { word: "衣服", pinyin: "yī fu", translation: "Clothes" },
+                    { word: "玩具", pinyin: "wán jù", translation: "Toy" },
+                    { word: "教室", pinyin: "jiào shì", translation: "Classroom" },
+                    { word: "同学", pinyin: "tóng xué", translation: "Classmate" },
+                    { word: "干净", pinyin: "gān jìng", translation: "Clean" },
+                    { word: "读书", pinyin: "dú shū", translation: "Read/Study" },
+                    { word: "操场", pinyin: "cāo chǎng", translation: "Playground" },
+                    { word: "西瓜", pinyin: "xī guā", translation: "Watermelon" },
+                    { word: "双手", pinyin: "shuāng shǒu", translation: "Both hands" },
+                    { word: "美丽", pinyin: "měi lì", translation: "Beautiful" }
+                ],
+                'higher': [
+                    { word: "危险", pinyin: "wēi xiǎn", translation: "Danger" },
+                    { word: "仔细", pinyin: "zǐ xì", translation: "Careful/Attentive" },
+                    { word: "照顾", pinyin: "zhào gù", translation: "Take care of" },
+                    { word: "保护", pinyin: "bǎo hù", translation: "Protect" },
+                    { word: "困难", pinyin: "kùn nan", translation: "Difficulties" },
+                    { word: "主动", pinyin: "zhǔ dòng", translation: "Proactive" },
+                    { word: "安全", pinyin: "ān quán", translation: "Safe/Safety" },
+                    { word: "意外", pinyin: "yì wài", translation: "Accident" },
+                    { word: "规则", pinyin: "guī zé", translation: "Rules" },
+                    { word: "原谅", pinyin: "yuán liàng", translation: "Forgive" },
+                    { word: "原来", pinyin: "yuán lái", translation: "Originally" },
+                    { word: "改正", pinyin: "gǎi zhèng", translation: "Correct/Amend" },
+                    { word: "进步", pinyin: "jìn bù", translation: "Progress" },
+                    { word: "表扬", pinyin: "biǎo yáng", translation: "Praise/Commend" },
+                    { word: "珍惜", pinyin: "zhēn xī", translation: "Cherish" },
+                    { word: "诚实", pinyin: "chéng shí", translation: "Honest" },
+                    { word: "虚心", pinyin: "xū xīn", translation: "Humble/Open-minded" },
+                    { word: "懂事", pinyin: "dǒng shì", translation: "Sensible" },
+                    { word: "勇敢", pinyin: "yǒng gǎn", translation: "Brave" },
+                    { word: "感谢", pinyin: "gǎn xiè", translation: "Thankful" },
+                    { word: "特别", pinyin: "tè bié", translation: "Special" },
+                    { word: "突然", pinyin: "tū rán", translation: "Suddenly" },
+                    { word: "明白", pinyin: "míng bai", translation: "Understand" },
+                    { word: "注意", pinyin: "zhù yì", translation: "Pay attention" },
+                    { word: "办法", pinyin: "bàn fǎ", translation: "Method/Way" },
+                    { word: "自私", pinyin: "zì sī", translation: "Selfish" },
+                    { word: "大方", pinyin: "dà fāng", translation: "Generous" },
+                    { word: "客气", pinyin: "kè qi", translation: "Polite" },
+                    { word: "骄傲", pinyin: "jiāo ào", translation: "Proud" },
+                    { word: "配合", pinyin: "pèi hé", translation: "Cooperate" },
+                    { word: "坚持", pinyin: "jiān chí", translation: "Persevere" },
+                    { word: "放弃", pinyin: "fàng qì", translation: "Give up" },
+                    { word: "认真", pinyin: "rèn zhēn", translation: "Serious/Diligent" },
+                    { word: "遵守", pinyin: "zūn shǒu", translation: "Abide by" },
+                    { word: "游戏", pinyin: "yóu xì", translation: "Game" },
+                    { word: "礼貌", pinyin: "lǐ mào", translation: "Polite" },
+                    { word: "帮助", pinyin: "bāng zhù", translation: "Help" },
+                    { word: "努力", pinyin: "nǔ lì", translation: "Hardworking" },
+                    { word: "分享", pinyin: "fēn xiǎng", translation: "Share" },
+                    { word: "团结", pinyin: "tuán jié", translation: "Unite" },
+                    { word: "关心", pinyin: "guān xīn", translation: "Care/Concern" },
+                    { word: "讲道理", pinyin: "jiǎng dào li", translation: "Be reasonable" },
+                    { word: "学习", pinyin: "xué xí", translation: "Study/Learn" },
+                    { word: "思考", pinyin: "sī kǎo", translation: "Think" },
+                    { word: "听讲", pinyin: "tīng jiǎng", translation: "Listen to lecture" },
+                    { word: "发问", pinyin: "fā wèn", translation: "Ask a question" },
+                    { word: "亲切", pinyin: "qīn qiè", translation: "Friendly" },
+                    { word: "同意", pinyin: "tóng yì", translation: "Agree" },
+                    { word: "拒绝", pinyin: "jù jué", translation: "Refuse" },
+                    { word: "安全", pinyin: "ān quán", translation: "Safe" },
+                    { word: "节约", pinyin: "jiē yuē", translation: "Save" },
+                    { word: "习惯", pinyin: "xí guàn", translation: "Habit" },
+                    { word: "原谅", pinyin: "yuán liàng", translation: "Forgive" },
+                    { word: "意外", pinyin: "yì wài", translation: "Accident" }
+                ]
+            },
+            'P3': {
+                'standard': [
+                    { word: "特别", pinyin: "tè bié", translation: "Special" },
+                    { word: "突然", pinyin: "tū rán", translation: "Suddenly" },
+                    { word: "遇到", pinyin: "yù dào", translation: "Encounter" },
+                    { word: "检查", pinyin: "jiǎn chá", translation: "Check/Inspect" },
+                    { word: "害怕", pinyin: "hài pà", translation: "Scared/Afraid" },
+                    { word: "难过", pinyin: "nán guò", translation: "Sad" },
+                    { word: "记得", pinyin: "jì de", translation: "Remember" },
+                    { word: "常常", pinyin: "cháng cháng", translation: "Often" },
+                    { word: "奇怪", pinyin: "qí guài", translation: "Strange" },
+                    { word: "相信", pinyin: "xiāng xìn", translation: "Believe" },
+                    { word: "明白", pinyin: "míng bai", translation: "Understand" },
+                    { word: "注意", pinyin: "zhù yì", translation: "Pay attention" },
+                    { word: "满意", pinyin: "mǎn yì", translation: "Satisfied" },
+                    { word: "办法", pinyin: "bàn fǎ", translation: "Method/Way" },
+                    { word: "庆祝", pinyin: "qìng zhù", translation: "Celebrate" },
+                    { word: "举行", pinyin: "jǔ xíng", translation: "Hold (event)" },
+                    { word: "节目", pinyin: "jié mù", translation: "Programme/Show" },
+                    { word: "表演", pinyin: "biǎo yǎn", translation: "Perform" },
+                    { word: "结束", pinyin: "jié shù", translation: "End/Finish" },
+                    { word: "温暖", pinyin: "wēn nuǎn", translation: "Warm" },
+                    { word: "礼物", pinyin: "lǐ wù", translation: "Gift/Present" },
+                    { word: "聪明", pinyin: "cōng ming", translation: "Clever" },
+                    { word: "游戏", pinyin: "yóu xì", translation: "Game" },
+                    { word: "努力", pinyin: "nǔ lì", translation: "Hardworking" },
+                    { word: "同意", pinyin: "tóng yì", translation: "Agree" },
+                    { word: "开始", pinyin: "kāi shǐ", translation: "Start/Begin" },
+                    { word: "刚才", pinyin: "gāng cái", translation: "Just now" },
+                    { word: "变化", pinyin: "biàn huà", translation: "Change/Transform" },
+                    { word: "感觉", pinyin: "gǎn jué", translation: "Feeling/Sensation" },
+                    { word: "讨论", pinyin: "tǎo lùn", translation: "Discuss" },
+                    { word: "意见", pinyin: "yì jiàn", translation: "Opinion" },
+                    { word: "机会", pinyin: "jī huì", translation: "Opportunity" },
+                    { word: "关系", pinyin: "guān xì", translation: "Relationship" },
+                    { word: "总是", pinyin: "zǒng shì", translation: "Always" },
+                    { word: "经过", pinyin: "jīng guò", translation: "Pass through" },
+                    { word: "必须", pinyin: "bì xū", translation: "Must" },
+                    { word: "准备", pinyin: "zhǔn bèi", translation: "Prepare" },
+                    { word: "邻居", pinyin: "lín jū", translation: "Neighbor" },
+                    { word: "图书馆", pinyin: "tú shū guǎn", translation: "Library" },
+                    { word: "发现", pinyin: "fā xiàn", translation: "Discover/Find" },
+                    { word: "方便", pinyin: "fāng biàn", translation: "Convenient" },
+                    { word: "互相", pinyin: "hù xiāng", translation: "Each other" },
+                    { word: "极了", pinyin: "jí le", translation: "Extremely" },
+                    { word: "觉得", pinyin: "jué de", translation: "Feel/Think" },
+                    { word: "生日", pinyin: "shēng rì", translation: "Birthday" },
+                    { word: "唱歌", pinyin: "chàng gē", translation: "Sing" },
+                    { word: "花朵", pinyin: "huā duǒ", translation: "Flower" },
+                    { word: "扫地", pinyin: "sǎo dì", translation: "Sweep floor" },
+                    { word: "照顾", pinyin: "zhào gù", translation: "Take care of" },
+                    { word: "安全", pinyin: "ān quán", translation: "Safe/Safety" },
+                    { word: "时候", pinyin: "shí hou", translation: "Time" },
+                    { word: "以前", pinyin: "yǐ qián", translation: "Before" },
+                    { word: "以后", pinyin: "yǐ hòu", translation: "After" },
+                    { word: "玩耍", pinyin: "wán shuǎ", translation: "Play" },
+                    { word: "跑步", pinyin: "pǎo bù", translation: "Run" },
+                    { word: "睡觉", pinyin: "shuì jiào", translation: "Sleep" },
+                    { word: "书包", pinyin: "shū bāo", translation: "Schoolbag" },
+                    { word: "美丽", pinyin: "měi lì", translation: "Beautiful" },
+                    { word: "读书", pinyin: "dú shū", translation: "Read/Study" },
+                    { word: "操场", pinyin: "cāo chǎng", translation: "Playground" }
+                ],
+                'higher': [
+                    { word: "得意", pinyin: "dé yì", translation: "Proud of oneself" },
+                    { word: "顺便", pinyin: "shùn biàn", translation: "By the way" },
+                    { word: "赶紧", pinyin: "gǎn jǐn", translation: "Hurriedly" },
+                    { word: "故意", pinyin: "gù yì", translation: "Intentionally" },
+                    { word: "赞成", pinyin: "zàn chéng", translation: "Agree/Approve" },
+                    { word: "争吵", pinyin: "zhēng chǎo", translation: "Quarrel" },
+                    { word: "歉意", pinyin: "qiān yì", translation: "Apology" },
+                    { word: "宽容", pinyin: "kuān róng", translation: "Tolerant" },
+                    { word: "建议", pinyin: "jiàn yì", translation: "Suggest" },
+                    { word: "解决", pinyin: "jiě jué", translation: "Resolve" },
+                    { word: "矛盾", pinyin: "máo dùn", translation: "Conflict" },
+                    { word: "体谅", pinyin: "tǐ liàng", translation: "Show understanding" },
+                    { word: "谦虚", pinyin: "qiān xū", translation: "Humble" },
+                    { word: "骄傲", pinyin: "jiāo ào", translation: "Proud/Arrogant" },
+                    { word: "成绩", pinyin: "chéng jì", translation: "Result/Grades" },
+                    { word: "讲信用", pinyin: "jiǎng xìn yòng", translation: "Keep one's word" },
+                    { word: "责任心", pinyin: "zé rèn xīn", translation: "Responsibility" },
+                    { word: "耐烦", pinyin: "nài fán", translation: "Patient" },
+                    { word: "遵守", pinyin: "zūn shǒu", translation: "Abide by" },
+                    { word: "礼貌", pinyin: "lǐ mào", translation: "Polite" },
+                    { word: "保护", pinyin: "bǎo hù", translation: "Protect" },
+                    { word: "困难", pinyin: "kùn nan", translation: "Difficult" },
+                    { word: "危险", pinyin: "wēi xiǎn", translation: "Danger" },
+                    { word: "仔细", pinyin: "zǐ xì", translation: "Careful" },
+                    { word: "照顾", pinyin: "zhào gù", translation: "Take care of" },
+                    { word: "诚实", pinyin: "chéng shí", translation: "Honest" },
+                    { word: "进步", pinyin: "jìn bù", translation: "Progress" },
+                    { word: "原谅", pinyin: "yuán liàng", translation: "Forgive" },
+                    { word: "珍惜", pinyin: "zhēn xī", translation: "Cherish" },
+                    { word: "帮助", pinyin: "bāng zhù", translation: "Help" },
+                    { word: "认真", pinyin: "rèn zhēn", translation: "Serious/Diligent" },
+                    { word: "努力", pinyin: "nǔ lì", translation: "Hardworking" },
+                    { word: "关心", pinyin: "guān xīn", translation: "Care/Concern" },
+                    { word: "改正", pinyin: "gǎi zhèng", translation: "Correct" },
+                    { word: "安全", pinyin: "ān quán", translation: "Safe" },
+                    { word: "节约", pinyin: "jiē yuē", translation: "Save" },
+                    { word: "同伴", pinyin: "tóng bàn", translation: "Companion" },
+                    { word: "环境", pinyin: "huán jìng", translation: "Environment" },
+                    { word: "游戏", pinyin: "yóu xì", translation: "Game" },
+                    { word: "懂事", pinyin: "dǒng shì", translation: "Sensible" },
+                    { word: "勇敢", pinyin: "yǒng gǎn", translation: "Brave" },
+                    { word: "感谢", pinyin: "gǎn xiè", translation: "Thankful" },
+                    { word: "自私", pinyin: "zì sī", translation: "Selfish" },
+                    { word: "大方", pinyin: "dà fāng", translation: "Generous" },
+                    { word: "谦虚", pinyin: "qiān xū", translation: "Humble" },
+                    { word: "虚心", pinyin: "xū xīn", translation: "Open-minded" },
+                    { word: "改正", pinyin: "gǎi zhèng", translation: "Correct" },
+                    { word: "拒绝", pinyin: "jù jué", translation: "Refuse" },
+                    { word: "配合", pinyin: "pèi hé", translation: "Cooperate" },
+                    { word: "习惯", pinyin: "xí guàn", translation: "Habit" },
+                    { word: "意外", pinyin: "yì wài", translation: "Accident" },
+                    { word: "原谅", pinyin: "yuán liàng", translation: "Forgive" },
+                    { word: "骄傲", pinyin: "jiāo ào", translation: "Proud" },
+                    { word: "坚持", pinyin: "jiān chí", translation: "Persevere" },
+                    { word: "分享", pinyin: "fēn xiǎng", translation: "Share" },
+                    { word: "讨论", pinyin: "tǎo lùn", translation: "Discuss" },
+                    { word: "合作", pinyin: "hé zuò", translation: "Cooperate" },
+                    { word: "规矩", pinyin: "guī ju", translation: "Rules" },
+                    { word: "纠纷", pinyin: "jiū fēn", translation: "Dispute" },
+                    { word: "解决", pinyin: "jiě jué", translation: "Resolve" }
+                ]
+            },
+            'P4': {
+                'standard': [
+                    { word: "决定", pinyin: "jué dìng", translation: "Decide" },
+                    { word: "顺利", pinyin: "shùn lì", translation: "Smoothly" },
+                    { word: "称赞", pinyin: "chēng zàn", translation: "Praise" },
+                    { word: "坚持", pinyin: "jiān chí", translation: "Persevere" },
+                    { word: "活泼", pinyin: "huó pō", translation: "Lively" },
+                    { word: "顽皮", pinyin: "wán pí", translation: "Mischievous" },
+                    { word: "严格", pinyin: "yán gé", translation: "Strict" },
+                    { word: "耐心", pinyin: "nài xīn", translation: "Patient" },
+                    { word: "脾气", pinyin: "pí qi", translation: "Temper" },
+                    { word: "谦虚", pinyin: "qiān xū", translation: "Humble" },
+                    { word: "培养", pinyin: "péi yǎng", translation: "Cultivate/Foster" },
+                    { word: "习惯", pinyin: "xí guàn", translation: "Habit" },
+                    { word: "态度", pinyin: "tài du", translation: "Attitude" },
+                    { word: "粗心", pinyin: "cū xīn", translation: "Careless" },
+                    { word: "马虎", pinyin: "mǎ hu", translation: "Sloppy" },
+                    { word: "鼓励", pinyin: "gǔ lì", translation: "Encourage" },
+                    { word: "支持", pinyin: "zhī chí", translation: "Support" },
+                    { word: "信心", pinyin: "xìn xīn", translation: "Confidence" },
+                    { word: "风景", pinyin: "fēng jǐng", translation: "Scenery" },
+                    { word: "旅客", pinyin: "lǚ kè", translation: "Traveler" },
+                    { word: "也许", pinyin: "yě xǔ", translation: "Perhaps" },
+                    { word: "实际上", pinyin: "shí jì shang", translation: "Actually" },
+                    { word: "准备", pinyin: "zhǔn bèi", translation: "Prepare" },
+                    { word: "特别", pinyin: "tè bié", translation: "Special" },
+                    { word: "突然", pinyin: "tū rán", translation: "Suddenly" },
+                    { word: "遇到", pinyin: "yù dào", translation: "Encounter" },
+                    { word: "检查", pinyin: "jiǎn chá", translation: "Check/Inspect" },
+                    { word: "害怕", pinyin: "hài pà", translation: "Scared/Afraid" },
+                    { word: "难过", pinyin: "nán guò", translation: "Sad" },
+                    { word: "相信", pinyin: "xiāng xìn", translation: "Believe" },
+                    { word: "明白", pinyin: "míng bai", translation: "Understand" },
+                    { word: "办法", pinyin: "bàn fǎ", translation: "Method/Way" },
+                    { word: "庆祝", pinyin: "qìng zhù", translation: "Celebrate" },
+                    { word: "结束", pinyin: "jié shù", translation: "End/Finish" },
+                    { word: "满意", pinyin: "mǎn yì", translation: "Satisfied" },
+                    { word: "同意", pinyin: "tóng yì", translation: "Agree" },
+                    { word: "奇怪", pinyin: "qí guài", translation: "Strange" },
+                    { word: "记得", pinyin: "jì de", translation: "Remember" },
+                    { word: "关系", pinyin: "guān xì", translation: "Relationship" },
+                    { word: "举行", pinyin: "jǔ xíng", translation: "Hold (event)" },
+                    { word: "事情", pinyin: "shì qing", translation: "Matter/Business" },
+                    { word: "总是", pinyin: "zǒng shì", translation: "Always" },
+                    { word: "经过", pinyin: "jīng guò", translation: "Pass through" },
+                    { word: "已经", pinyin: "yǐ jīng", translation: "Already" },
+                    { word: "发现", pinyin: "fā xiàn", translation: "Discover/Find" },
+                    { word: "走路", pinyin: "zǒu lù", translation: "Walk" },
+                    { word: "时候", pinyin: "shí hou", translation: "Time" },
+                    { word: "以前", pinyin: "yǐ qián", translation: "Before" },
+                    { word: "以后", pinyin: "yǐ hòu", translation: "After" },
+                    { word: "玩耍", pinyin: "wán shuǎ", translation: "Play" },
+                    { word: "跑步", pinyin: "pǎo bù", translation: "Run" },
+                    { word: "睡觉", pinyin: "shuì jiào", translation: "Sleep" },
+                    { word: "美丽", pinyin: "měi lì", translation: "Beautiful" },
+                    { word: "操场", pinyin: "cāo chǎng", translation: "Playground" },
+                    { word: "should", pinyin: "yīng gāi", translation: "应该" },
+                    { word: "觉得", pinyin: "jué de", translation: "Feel/Think" },
+                    { word: "帮忙", pinyin: "bāng máng", translation: "Help" },
+                    { word: "常常", pinyin: "cháng cháng", translation: "Often" },
+                    { word: "安全", pinyin: "ān quán", translation: "Safe" },
+                    { word: "游戏", pinyin: "yóu xì", translation: "Game" },
+                    { word: "读书", pinyin: "dú shū", translation: "Read/Study" },
+                    { word: "礼物", pinyin: "lǐ wù", translation: "Gift" },
+                    { word: "变化", pinyin: "biàn huà", translation: "Change" },
+                    { word: "感觉", pinyin: "gǎn jué", translation: "Feeling" }
+                ],
+                'higher': [
+                    { word: "惭愧", pinyin: "cán kuì", translation: "Ashamed" },
+                    { word: "羡慕", pinyin: "xiàn mù", translation: "Envy" },
+                    { word: "愤怒", pinyin: "fèn nù", translation: "Angry/Furious" },
+                    { word: "抱怨", pinyin: "bào yuàn", translation: "Complain" },
+                    { word: "谅解", pinyin: "liàng jiě", translation: "Understand/Forgive" },
+                    { word: "维护", pinyin: "wéi hù", translation: "Maintain" },
+                    { word: "限制", pinyin: "xiàn zhì", translation: "Restrict" },
+                    { word: "规矩", pinyin: "guī ju", translation: "Rules" },
+                    { word: "纠纷", pinyin: "jiū fēn", translation: "Dispute" },
+                    { word: "容忍", pinyin: "róng rěn", translation: "Tolerate" },
+                    { word: "友谊", pinyin: "yǒu yì", translation: "Friendship" },
+                    { word: "珍惜", pinyin: "zhēn xī", translation: "Cherish" },
+                    { word: "信任", pinyin: "xìn rèn", translation: "Trust" },
+                    { word: "陪伴", pinyin: "péi bàn", translation: "Accompany" },
+                    { word: "包容", pinyin: "bāo róng", translation: "Tolerate/Accept" },
+                    { word: "温和", pinyin: "wēn hé", translation: "Gentle" },
+                    { word: "羞愧", pinyin: "xiū kuì", translation: "Ashamed" },
+                    { word: "得意", pinyin: "dé yì", translation: "Proud of oneself" },
+                    { word: "顺便", pinyin: "shùn biàn", translation: "By the way" },
+                    { word: "赶紧", pinyin: "gǎn jǐn", translation: "Hurriedly" },
+                    { word: "故意", pinyin: "gù yì", translation: "Intentionally" },
+                    { word: "赞成", pinyin: "zàn chéng", translation: "Agree/Approve" },
+                    { word: "争吵", pinyin: "zhēng chǎo", translation: "Quarrel" },
+                    { word: "歉意", pinyin: "qiān yì", translation: "Apology" },
+                    { word: "解决", pinyin: "jiě jué", translation: "Resolve" },
+                    { word: "矛盾", pinyin: "máo dùn", translation: "Conflict" },
+                    { word: "体谅", pinyin: "tǐ liàng", translation: "Show understanding" },
+                    { word: "谦虚", pinyin: "qiān xū", translation: "Humble" },
+                    { word: "骄傲", pinyin: "jiāo ào", translation: "Proud/Arrogant" },
+                    { word: "成绩", pinyin: "chéng jì", translation: "Result/Grades" },
+                    { word: "危险", pinyin: "wēi xiǎn", translation: "Danger" },
+                    { word: "仔细", pinyin: "zǐ xì", translation: "Careful" },
+                    { word: "照顾", pinyin: "zhào gù", translation: "Take care of" },
+                    { word: "保护", pinyin: "bǎo hù", translation: "Protect" },
+                    { word: "困难", pinyin: "kùn nan", translation: "Difficulties" },
+                    { word: "主动", pinyin: "zhǔ dòng", translation: "Proactive" },
+                    { word: "安全", pinyin: "ān quán", translation: "Safe/Safety" },
+                    { word: "意外", pinyin: "yì wài", translation: "Accident" },
+                    { word: "规则", pinyin: "guī zé", translation: "Rules" },
+                    { word: "原谅", pinyin: "yuán liàng", translation: "Forgive" },
+                    { word: "改正", pinyin: "gǎi zhèng", translation: "Correct/Amend" },
+                    { word: "进步", pinyin: "jìn bù", translation: "Progress" },
+                    { word: "诚实", pinyin: "chéng shí", translation: "Honest" },
+                    { word: "懂事", pinyin: "dǒng_shì", translation: "Sensible" },
+                    { word: "勇敢", pinyin: "yǒng gǎn", translation: "Brave" },
+                    { word: "自私", pinyin: "zì sī", translation: "Selfish" },
+                    { word: "坚持", pinyin: "jiān chí", translation: "Persevere" },
+                    { word: "认真", pinyin: "rèn zhēn", translation: "Serious/Diligent" },
+                    { word: "学习", pinyin: "xué xí", translation: "Study/Learn" },
+                    { word: "思考", pinyin: "sī kǎo", translation: "Think" },
+                    { word: "讲道理", pinyin: "jiǎng dào li", translation: "Be reasonable" },
+                    { word: "宽容", pinyin: "kuān róng", translation: "Tolerant" },
+                    { word: "解决", pinyin: "jiě jué", translation: "Resolve" },
+                    { word: "合作", pinyin: "hé zuò", translation: "Cooperate" },
+                    { word: "纠纷", pinyin: "jiū fēn", translation: "Dispute" },
+                    { word: "容忍", pinyin: "róng rěn", translation: "Tolerate" },
+                    { word: "谦虚", pinyin: "qiān xū", translation: "Humble" },
+                    { word: "友爱", pinyin: "yǒu ài", translation: "Friendly love" },
+                    { word: "信用", pinyin: "xìn yòng", translation: "Trustworthiness/Credit" },
+                    { word: "责任", pinyin: "zé rèn", translation: "Responsibility" },
+                    { word: "耐烦", pinyin: "nài fán", translation: "Patient" },
+                    { word: "主动", pinyin: "zhǔ dòng", translation: "Proactive" },
+                    { word: "赞赏", pinyin: "zàn shǎng", translation: "Appreciate" }
+                ]
+            },
+            'P5': {
+                'standard': [
+                    { word: "集合", pinyin: "jí hé", translation: "Assemble" },
+                    { word: "欢迎", pinyin: "huān yíng", translation: "Welcome" },
+                    { word: "贵重", pinyin: "guì zhòng", translation: "Valuable" },
+                    { word: "竞赛", pinyin: "jìng sài", translation: "Competition" },
+                    { word: "简单", pinyin: "jiǎn dān", translation: "Simple" },
+                    { word: "探险", pinyin: "tàn xiǎn", translation: "Adventure" },
+                    { word: "防止", pinyin: "fáng zhǐ", translation: "Prevent" },
+                    { word: "禁止", pinyin: "jìn zhǐ", translation: "Forbid" },
+                    { word: "配合", pinyin: "pèi hé", translation: "Cooperate" },
+                    { word: "轮流", pinyin: "lún liú", translation: "Take turns" },
+                    { word: "克服", pinyin: "kè fú", translation: "Overcome" },
+                    { word: "羞愧", pinyin: "xiū kuì", translation: "Ashamed" },
+                    { word: "温和", pinyin: "wēn hé", translation: "Gentle" },
+                    { word: "甚至", pinyin: "shèn zhì", translation: "Even/So much so" },
+                    { word: "积极", pinyin: "jī jí", translation: "Positive/Active" },
+                    { word: "确实", pinyin: "què shí", translation: "Indeed/Really" },
+                    { word: "盼望", pinyin: "pàn wàng", translation: "Look forward to" },
+                    { word: "维持", pinyin: "wéi chí", translation: "Maintain" },
+                    { word: "呼吸", pinyin: "hū xī", translation: "Breathe" },
+                    { word: "压力", pinyin: "yā lì", translation: "Pressure/Stress" },
+                    { word: "挑战", pinyin: "tiǎo zhàn", translation: "Challenge" },
+                    { word: "胜利", pinyin: "shèng lì", translation: "Victory" },
+                    { word: "目标", pinyin: "mù biāo", translation: "Target/Goal" },
+                    { word: "理想", pinyin: "lǐ xiǎng", translation: "Ideal" },
+                    { word: "放弃", pinyin: "fàng qì", translation: "Give up" },
+                    { word: "贡献", pinyin: "gòng xiàn", translation: "Contribute" },
+                    { word: "价值", pinyin: "jià zhí", translation: "Value" },
+                    { word: "舒适", pinyin: "shū shì", translation: "Comfortable" },
+                    { word: "环境", pinyin: "huán jìng", translation: "Environment" },
+                    { word: "破坏", pinyin: "pò huài", translation: "Destroy" },
+                    { word: "污染", pinyin: "wū rǎn", translation: "Pollute/Pollution" },
+                    { word: "决定", pinyin: "jué dìng", translation: "Decide" },
+                    { word: "顺利", pinyin: "shùn lì", translation: "Smoothly" },
+                    { word: "称赞", pinyin: "chēng zàn", translation: "Praise" },
+                    { word: "坚持", pinyin: "jiān chí", translation: "Persevere" },
+                    { word: "严格", pinyin: "yán gé", translation: "Strict" },
+                    { word: "耐心", pinyin: "nài xīn", translation: "Patient" },
+                    { word: "脾气", pinyin: "pí qi", translation: "Temper" },
+                    { word: "习惯", pinyin: "xí guàn", translation: "Habit" },
+                    { word: "态度", pinyin: "tài du", translation: "Attitude" },
+                    { word: "粗心", pinyin: "cū xīn", translation: "Careless" },
+                    { word: "马虎", pinyin: "mǎ hu", translation: "Sloppy" },
+                    { word: "鼓励", pinyin: "gǔ lì", translation: "Encourage" },
+                    { word: "支持", pinyin: "zhī chí", translation: "Support" },
+                    { word: "信心", pinyin: "xìn xīn", translation: "Confidence" },
+                    { word: "特别", pinyin: "tè bié", translation: "Special" },
+                    { word: "突然", pinyin: "tū rán", translation: "Suddenly" },
+                    { word: "明白", pinyin: "míng bai", translation: "Understand" },
+                    { word: "害怕", pinyin: "hài pà", translation: "Scared/Afraid" },
+                    { word: "注意", pinyin: "zhù yì", translation: "Pay attention" },
+                    { word: "检查", pinyin: "jiǎn chá", translation: "Check" },
+                    { word: "准备", pinyin: "zhǔn bèi", translation: "Prepare" },
+                    { word: "举行", pinyin: "jǔ xíng", translation: "Hold (event)" },
+                    { word: "总是", pinyin: "zǒng shì", translation: "Always" },
+                    { word: "经过", pinyin: "jīng guò", translation: "Pass through" },
+                    { word: "已经", pinyin: "yǐ jīng", translation: "Already" },
+                    { word: "方便", pinyin: "fāng biàn", translation: "Convenient" },
+                    { word: "安全", pinyin: "ān quán", translation: "Safe/Safety" },
+                    { word: "走路", pinyin: "zǒu lù", translation: "Walk" },
+                    { word: "以前", pinyin: "yǐ qián", translation: "Before" },
+                    { word: "以后", pinyin: "yǐ hòu", translation: "After" },
+                    { word: "跑步", pinyin: "pǎo bù", translation: "Run" },
+                    { word: "操场", pinyin: "cāo chǎng", translation: "Playground" },
+                    { word: "应该", pinyin: "yīng gāi", translation: "Should" },
+                    { word: "觉得", pinyin: "jué de", translation: "Feel/Think" },
+                    { word: "常常", pinyin: "cháng cháng", translation: "Often" },
+                    { word: "关系", pinyin: "guān xì", translation: "Relationship" },
+                    { word: "感觉", pinyin: "gǎn jué", translation: "Feeling" },
+                    { word: "读书", pinyin: "dú shū", translation: "Read/Study" },
+                    { word: "写字", pinyin: "xiě zì", translation: "Write characters" },
+                    { word: "朋友", pinyin: "péng you", translation: "Friend" },
+                    { word: "老师", pinyin: "lǎo shī", translation: "Teacher" },
+                    { word: "学校", pinyin: "xué xiào", translation: "School" }
+                ],
+                'higher': [
+                    { word: "齐心协力", pinyin: "qí xīn xié lì", translation: "Work as one" },
+                    { word: "狼吞虎咽", pinyin: "láng tūn hǔ yàn", translation: "Wolf down" },
+                    { word: "摇摆", pinyin: "yáo bǎi", translation: "Sway" },
+                    { word: "犹豫", pinyin: "yóu yù", translation: "Hesitate" },
+                    { word: "牺牲", pinyin: "xī shēng", translation: "Sacrifice" },
+                    { word: "毅力", pinyin: "yì lì", translation: "Willpower" },
+                    { word: "关键", pinyin: "guān jiàn", translation: "Key/Crucial" },
+                    { word: "掌握", pinyin: "zhǎng wò", translation: "Master/Grasp" },
+                    { word: "卓越", pinyin: "zhuó yuè", translation: "Outstanding" },
+                    { word: "荣誉", pinyin: "róng yù", translation: "Honor" },
+                    { word: "敬佩", pinyin: "jìng pèi", translation: "Admire" },
+                    { word: "执着", pinyin: "zhí zhuó", translation: "Persistent" },
+                    { word: "宽大", pinyin: "kuān dà", translation: "Generous" },
+                    { word: "忠诚", pinyin: "zhōng chéng", translation: "Loyal" },
+                    { word: "坚持不懈", pinyin: "jiān chí bú xiè", translation: "Unremitting perseverance" },
+                    { word: "见义勇为", pinyin: "jiàn yì yǒng wéi", translation: "Act courageously" },
+                    { word: "大公无私", pinyin: "dài gōng wú sī", translation: "Unselfish/Just" },
+                    { word: "舍己为人", pinyin: "shě jǐ wèi rén", translation: "Sacrifice self for others" },
+                    { word: "自强不息", pinyin: "zì qiáng bù xī", translation: "Self-improvement" },
+                    { word: "持之以恒", pinyin: "chí zhī yǐ héng", translation: "Persevere" },
+                    { word: "惭愧", pinyin: "cán kuì", translation: "Ashamed" },
+                    { word: "羡慕", pinyin: "xiàn mù", translation: "Envy" },
+                    { word: "愤怒", pinyin: "fèn nù", translation: "Angry/Furious" },
+                    { word: "抱怨", pinyin: "bào yuàn", translation: "Complain" },
+                    { word: "谅解", pinyin: "liàng jiě", translation: "Understand/Forgive" },
+                    { word: "维护", pinyin: "wéi hù", translation: "Maintain" },
+                    { word: "规矩", pinyin: "guī ju", translation: "Rules" },
+                    { word: "纠纷", pinyin: "jiū fēn", translation: "Dispute" },
+                    { word: "友谊", pinyin: "yǒu yì", translation: "Friendship" },
+                    { word: "珍惜", pinyin: "zhēn xī", translation: "Cherish" },
+                    { word: "信任", pinyin: "xìn rèn", translation: "Trust" },
+                    { word: "谦虚", pinyin: "qiān xū", translation: "Humble" },
+                    { word: "骄傲", pinyin: "jiāo ào", translation: "Proud/Arrogant" },
+                    { word: "解决", pinyin: "jiě jué", translation: "Resolve" },
+                    { word: "矛盾", pinyin: "máo dùn", translation: "Conflict" },
+                    { word: "宽容", pinyin: "kuān róng", translation: "Tolerant" },
+                    { word: "歉意", pinyin: "qiān yì", translation: "Apology" },
+                    { word: "争吵", pinyin: "zhēng chǎo", translation: "Quarrel" },
+                    { word: "容忍", pinyin: "róng rěn", translation: "Tolerate" },
+                    { word: "得意", pinyin: "dé yì", translation: "Proud of oneself" },
+                    { word: "顺便", pinyin: "shùn biàn", translation: "By the way" },
+                    { word: "赶紧", pinyin: "gǎn jǐn", translation: "Hurriedly" },
+                    { word: "故意", pinyin: "gù yì", translation: "Intentionally" },
+                    { word: "赞成", pinyin: "zàn chéng", translation: "Agree/Approve" },
+                    { word: "解决", pinyin: "jiě jué", translation: "Resolve" },
+                    { word: "体谅", pinyin: "tǐ liàng", translation: "Show understanding" },
+                    { word: "成绩", pinyin: "chéng jì", translation: "Result/Grades" },
+                    { word: "遵守", pinyin: "zūn shǒu", translation: "Abide by" },
+                    { word: "礼貌", pinyin: "lǐ mào", translation: "Polite" },
+                    { word: "保护", pinyin: "bǎo hù", translation: "Protect" },
+                    { word: "困难", pinyin: "kùn nan", translation: "Difficulties" },
+                    { word: "危险", pinyin: "wēi xiǎn", translation: "Danger" },
+                    { word: "仔细", pinyin: "zǐ xì", translation: "Careful" },
+                    { word: "照顾", pinyin: "zhào gù", translation: "Take care of" },
+                    { word: "诚实", pinyin: "chéng shí", translation: "Honest" },
+                    { word: "进步", pinyin: "jìn bù", translation: "Progress" },
+                    { word: "帮助", pinyin: "bāng zhù", translation: "Help" },
+                    { word: "认真", pinyin: "rèn zhēn", translation: "Serious/Diligent" },
+                    { word: "努力", pinyin: "nǔ lì", translation: "Hardworking" },
+                    { word: "关心", pinyin: "guān xīn", translation: "Care/Concern" },
+                    { word: "改正", pinyin: "gǎi zhèng", translation: "Correct" },
+                    { word: "安全", pinyin: "ān quán", translation: "Safe/Safety" },
+                    { word: "节约", pinyin: "jiē yuē", translation: "Save" },
+                    { word: "懂事", pinyin: "dǒng_shì", translation: "Sensible" },
+                    { word: "勇敢", pinyin: "yǒng gǎn", translation: "Brave" },
+                    { word: "自私", pinyin: "zì sī", translation: "Selfish" },
+                    { word: "大方", pinyin: "dà fāng", translation: "Generous" },
+                    { word: "配合", pinyin: "pèi hé", translation: "Cooperate" },
+                    { word: "习惯", pinyin: "xí guàn", translation: "Habit" },
+                    { word: "意外", pinyin: "yì wài", translation: "Accident" },
+                    { word: "同伴", pinyin: "tóng bàn", translation: "Companion" },
+                    { word: "限制", pinyin: "xiàn zhì", translation: "Restrict" },
+                    { word: "陪伴", pinyin: "péi bàn", translation: "Accompany" },
+                    { word: "包容", pinyin: "bāo róng", translation: "Tolerate/Accept" }
+                ]
+            },
+            'P6': {
+                'standard': [
+                    { word: "拼搏", pinyin: "pīn bó", translation: "Struggle/Strive hard" },
+                    { word: "稍微", pinyin: "shāo wēi", translation: "Slightly" },
+                    { word: "珍惜", pinyin: "zhēn xī", translation: "Cherish" },
+                    { word: "敏捷", pinyin: "mǐn jié", translation: "Agile" },
+                    { word: "智慧", pinyin: "zhì huì", translation: "Wisdom" },
+                    { word: "环境", pinyin: "huán jìng", translation: "Environment" },
+                    { word: "破坏", pinyin: "pò huài", translation: "Destroy" },
+                    { word: "惩罚", pinyin: "chéng fá", translation: "Punish" },
+                    { word: "警告", pinyin: "jǐng gào", translation: "Warn" },
+                    { word: "恢复", pinyin: "huī fù", translation: "Recover" },
+                    { word: "资源", pinyin: "zī yuán", translation: "Resources" },
+                    { word: "节约", pinyin: "jiē yuē", translation: "Save/Economize" },
+                    { word: "垃圾", pinyin: "lā jī", translation: "Rubbish" },
+                    { word: "污染", pinyin: "wū rǎn", translation: "Pollution" },
+                    { word: "浪费", pinyin: "làng fèi", translation: "Waste" },
+                    { word: "保护", pinyin: "bǎo hù", translation: "Protect" },
+                    { word: "意识", pinyin: "yì shí", translation: "Awareness" },
+                    { word: "改善", pinyin: "gǎi shàn", translation: "Improve" },
+                    { word: "创造", pinyin: "chuàng zào", translation: "Create" },
+                    { word: "责任", pinyin: "zé rèn", translation: "Responsibility" },
+                    { word: "坚强", pinyin: "jiān qiáng", translation: "Strong/Firm" },
+                    { word: "态度", pinyin: "tài du", translation: "Attitude" },
+                    { word: "避免", pinyin: "bì miǎn", translation: "Avoid" },
+                    { word: "合作", pinyin: "hé zuò", translation: "Cooperate" },
+                    { word: "贡献", pinyin: "gòng xiàn", translation: "Contribute" },
+                    { word: "价值", pinyin: "jià zhí", translation: "Value" },
+                    { word: "舒适", pinyin: "shū shì", translation: "Comfortable" },
+                    { word: "压力", pinyin: "yā lì", translation: "Pressure/Stress" },
+                    { word: "挑战", pinyin: "tiǎo zhàn", translation: "Challenge" },
+                    { word: "胜利", pinyin: "shèng lì", translation: "Victory" },
+                    { word: "目标", pinyin: "mù biāo", translation: "Target/Goal" },
+                    { word: "理想", pinyin: "lǐ xiǎng", translation: "Ideal" },
+                    { word: "放弃", pinyin: "fàng qì", translation: "Give up" },
+                    { word: "克服", pinyin: "kè fú", translation: "Overcome" },
+                    { word: "羞愧", pinyin: "xiū kuì", translation: "Ashamed" },
+                    { word: "温和", pinyin: "wēn hé", translation: "Gentle" },
+                    { word: "简单", pinyin: "jiǎn dān", translation: "Simple" },
+                    { word: "竞赛", pinyin: "jìng sài", translation: "Competition" },
+                    { word: "集合", pinyin: "jí hé", translation: "Assemble" },
+                    { word: "决定", pinyin: "jué dìng", translation: "Decide" },
+                    { word: "顺利", pinyin: "shùn lì", translation: "Smoothly" },
+                    { word: "称赞", pinyin: "chēng zàn", translation: "Praise" },
+                    { word: "坚持", pinyin: "jiān chí", translation: "Persevere" },
+                    { word: "严格", pinyin: "yán gé", translation: "Strict" },
+                    { word: "耐心", pinyin: "nài xīn", translation: "Patient" },
+                    { word: "培养", pinyin: "péi yǎng", translation: "Cultivate" },
+                    { word: "习惯", pinyin: "xí guàn", translation: "Habit" },
+                    { word: "粗心", pinyin: "cū xīn", translation: "Careless" },
+                    { word: "鼓励", pinyin: "gǔ lì", translation: "Encourage" },
+                    { word: "支持", pinyin: "zhī chí", translation: "Support" },
+                    { word: "信心", pinyin: "xìn xīn", translation: "Confidence" },
+                    { word: "明白", pinyin: "míng bai", translation: "Understand" },
+                    { word: "注意", pinyin: "zhù yì", translation: "Pay attention" },
+                    { word: "突然", pinyin: "tū rán", translation: "Suddenly" },
+                    { word: "特别", pinyin: "tè bié", translation: "Special" },
+                    { word: "准备", pinyin: "zhǔn bèi", translation: "Prepare" },
+                    { word: "已经", pinyin: "yǐ jīng", translation: "Already" },
+                    { word: "应该", pinyin: "yīng gāi", translation: "Should" },
+                    { word: "安全", pinyin: "ān quán", translation: "Safe/Safety" },
+                    { word: "健康", pinyin: "jiàn kāng", translation: "Healthy" },
+                    { word: "甚至", pinyin: "shèn zhì", translation: "Even" },
+                    { word: "积极", pinyin: "jī jí", translation: "Positive" },
+                    { word: "确实", pinyin: "què shí", translation: "Indeed" },
+                    { word: "维持", pinyin: "wéi chí", translation: "Maintain" },
+                    { word: "走路", pinyin: "zǒu lù", translation: "Walk" },
+                    { word: "读书", pinyin: "dú shū", translation: "Study" },
+                    { word: "写字", pinyin: "xiě zì", translation: "Write" },
+                    { word: "操场", pinyin: "cāo chǎng", translation: "Playground" },
+                    { word: "跑步", pinyin: "pǎo bù", translation: "Run" },
+                    { word: "遇到", pinyin: "yù dào", translation: "Encounter" },
+                    { word: "检查", pinyin: "jiǎn chá", translation: "Check" },
+                    { word: "害怕", pinyin: "hài pà", translation: "Fear" },
+                    { word: "庆祝", pinyin: "qìng zhù", translation: "Celebrate" },
+                    { word: "礼物", pinyin: "lǐ wù", translation: "Gift" },
+                    { word: "变化", pinyin: "biàn huà", translation: "Change" },
+                    { word: "觉得", pinyin: "jué de", translation: "Feel/Think" },
+                    { word: "开始", pinyin: "kāi shǐ", translation: "Start" },
+                    { word: "经常", pinyin: "jīng cháng", translation: "Frequently" },
+                    { word: "干净", pinyin: "gān jìng", translation: "Clean" },
+                    { word: "常常", pinyin: "cháng cháng", translation: "Often" },
+                    { word: "相信", pinyin: "xiāng xìn", translation: "Believe" },
+                    { word: "发现", pinyin: "fā xiàn", translation: "Discover" }
+                ],
+                'higher': [
+                    { word: "瞻仰", pinyin: "zhān yǎng", translation: "Gaze with respect" },
+                    { word: "沧桑", pinyin: "cāng sāng", translation: "Changes of life" },
+                    { word: "侃侃而谈", pinyin: "kǎn kǎn ér tán", translation: "Speak confidently" },
+                    { word: "艰苦", pinyin: "jiān kǔ", translation: "Arduous/Difficult" },
+                    { word: "豁达", pinyin: "huò dá", translation: "Broad-minded" },
+                    { word: "璀璨", pinyin: "cuǐ càn", translation: "Brilliant/Resplendent" },
+                    { word: "蓬勃", pinyin: "péng bó", translation: "Flourishing" },
+                    { word: "慷慨", pinyin: "kāng kǎi", translation: "Generous" },
+                    { word: "崇高", pinyin: "chóng gao", translation: "Lofty/Sublime" },
+                    { word: "谴责", pinyin: "qiǎn zé", translation: "Condemn" },
+                    { word: "妥协", pinyin: "tuǒ xié", translation: "Compromise" },
+                    { word: "诚心诚意", pinyin: "chéng xīn chéng yì", translation: "Sincerely" },
+                    { word: "深奥", pinyin: "shēn ào", translation: "Profound" },
+                    { word: "锲而不舍", pinyin: "qiè ér bù shě", translation: "Persevere" },
+                    { word: "饮水思源", pinyin: "yǐn shuǐ sī yuán", translation: "Gratitude for source" },
+                    { word: "同舟共济", pinyin: "tóng zhōu gòng jì", translation: "Pull together in danger" },
+                    { word: "居安思危", pinyin: "jū ān sī wēi", translation: "Be prepared for danger" },
+                    { word: "临危不惧", pinyin: "lín wēi bú jù", translation: "Fearless in danger" },
+                    { word: "守望相助", pinyin: "shǒu wàng xiāng zhù", translation: "Help each other" },
+                    { word: "风雨同舟", pinyin: "fēng yǔ tóng zhōu", translation: "Share hardship" },
+                    { word: "齐心协力", pinyin: "qí xīn xié lì", translation: "Work as one" },
+                    { word: "狼吞虎咽", pinyin: "láng tūn hǔ yàn", translation: "Wolf down" },
+                    { word: "摇摆", pinyin: "yáo bǎi", translation: "Sway" },
+                    { word: "犹豫", pinyin: "yóu yù", translation: "Hesitate" },
+                    { word: "牺牲", pinyin: "xī shēng", translation: "Sacrifice" },
+                    { word: "毅力", pinyin: "yì lì", translation: "Willpower" },
+                    { word: "关键", pinyin: "guān jiàn", translation: "Key/Crucial" },
+                    { word: "掌握", pinyin: "zhǎng wò", translation: "Master/Grasp" },
+                    { word: "卓越", pinyin: "zhuó yuè", translation: "Outstanding" },
+                    { word: "荣誉", pinyin: "róng yù", translation: "Honor" },
+                    { word: "敬佩", pinyin: "jìng pèi", translation: "Admire" },
+                    { word: "执着", pinyin: "zhí zhuó", translation: "Persistent" },
+                    { word: "宽大", pinyin: "kuān dà", translation: "Generous" },
+                    { word: "忠诚", pinyin: "zhōng chéng", translation: "Loyal" },
+                    { word: "坚持不懈", pinyin: "jiān chí bú xiè", translation: "Unremitting perseverance" },
+                    { word: "见义勇为", pinyin: "jiàn yì yǒng wéi", translation: "Act courageously" },
+                    { word: "大公无私", pinyin: "dài gōng wú sī", translation: "Unselfish/Just" },
+                    { word: "舍己为人", pinyin: "shě jǐ wèi rén", translation: "Sacrifice self for others" },
+                    { word: "自强不息", pinyin: "zì qiáng bù xī", translation: "Self-improvement" },
+                    { word: "持之以恒", pinyin: "chí zhī yǐ héng", translation: "Persevere" },
+                    { word: "惭愧", pinyin: "cán kuì", translation: "Ashamed" },
+                    { word: "羡慕", pinyin: "xiàn mù", translation: "Envy" },
+                    { word: "愤怒", pinyin: "fèn nù", translation: "Angry/Furious" },
+                    { word: "抱怨", pinyin: "bào yuàn", translation: "Complain" },
+                    { word: "谅解", pinyin: "liàng jiě", translation: "Understand/Forgive" },
+                    { word: "维护", pinyin: "wéi hù", translation: "Maintain" },
+                    { word: "规矩", pinyin: "guī ju", translation: "Rules" },
+                    { word: "纠纷", pinyin: "jiū fēn", translation: "Dispute" },
+                    { word: "友谊", pinyin: "yǒu yì", translation: "Friendship" },
+                    { word: "珍惜", pinyin: "zhēn xī", translation: "Cherish" },
+                    { word: "信任", pinyin: "xìn rèn", translation: "Trust" },
+                    { word: "得意外形", pinyin: "dé yì wài xíng", translation: "得意 (recap)" },
+                    { word: "解决问题", pinyin: "jiě jué wèn tí", translation: "解决 (recap)" },
+                    { word: "宽容大度", pinyin: "kuān róng dà dù", translation: "宽容 (recap)" },
+                    { word: "勤奋学习", pinyin: "qín fèn xué xí", translation: "勤奋 (recap)" },
+                    { word: "勇敢面对", pinyin: "yǒng gǎn miàn duì", translation: "勇敢 (recap)" },
+                    { word: "谦虚好学", pinyin: "qiān xū hào xué", translation: "谦虚 (recap)" },
+                    { word: "克服困难", pinyin: "kè fú kùn nan", translation: "克服 (recap)" },
+                    { word: "仔细检查", pinyin: "zǐ xì jiǎn chá", translation: "仔细 (recap)" },
+                    { word: "照顾病患", pinyin: "zhào gù bìng huàn", translation: "照顾 (recap)" },
+                    { word: "保护自然", pinyin: "bǎo hù zì rán", translation: "保护 (recap)" },
+                    { word: "讲究礼貌", pinyin: "jiǎng jiù lǐ mào", translation: "礼貌 (recap)" },
+                    { word: "配合默契", pinyin: "pèi hé mò qì", translation: "配合 (recap)" },
+                    { word: "犹豫不决", pinyin: "yóu yù bù jué", translation: "犹豫 (recap)" },
+                    { word: "持之以恒", pinyin: "chí zhī yǐ héng", translation: "持之以恒 (recap)" },
+                    { word: "坚持到底", pinyin: "jiān chí dào dǐ", translation: "坚持 (recap)" },
+                    { word: "遵守规则", pinyin: "zūn shǒu guī zé", translation: "遵守 (recap)" },
+                    { word: "认真思考", pinyin: "rèn zhēn sī kǎo", translation: "认真 (recap)" },
+                    { word: "友谊长存", pinyin: "yǒu yì cháng cún", translation: "友谊 (recap)" },
+                    { word: "相互谅解", pinyin: "xiāng hù liàng jiě", translation: "谅解 (recap)" },
+                    { word: "原谅他人", pinyin: "yuán liàng tā rén", translation: "原谅 (recap)" },
+                    { word: "安全第一", pinyin: "ān quán dì yī", translation: "安全 (recap)" },
+                    { word: "珍惜时间", pinyin: "zhēn xī shí jiān", translation: "珍惜 (recap)" },
+                    { word: "节约用水", pinyin: "jiē yuē yòng shuǐ", translation: "节约 (recap)" },
+                    { word: "感谢恩师", pinyin: "gǎn xiè ēn shī", translation: "感谢 (recap)" },
+                    { word: "诚实守信", pinyin: "chéng shí shǒu xìn", translation: "诚实 (recap)" },
+                    { word: "大方待人", pinyin: "dà fāng dài rén", translation: "大方 (recap)" },
+                    { word: "规规矩矩", pinyin: "guī guī jǔ jǔ", translation: "规矩 (recap)" },
+                    { word: "陪伴左右", pinyin: "péi bàn zuǒ yòu", translation: "陪伴 (recap)" },
+                    { word: "包容理解", pinyin: "bāo róng lǐ jiě", translation: "包容 (recap)" },
+                    { word: "虚心请教", pinyin: "xū xīn qǐng jiào", translation: "虚心 (recap)" },
+                    { word: "大公无私", pinyin: "dà gōng wú sī", translation: "大公无私 (recap)" },
+                    { word: "见义勇为", pinyin: "jiàn yì yǒng wéi", translation: "见义勇为 (recap)" },
+                    { word: "舍己为人", pinyin: "shě jǐ wèi rén", translation: "舍己为人 (recap)" },
+                    { word: "同舟共济", pinyin: "tóng zhōu gòng jì", translation: "同舟共济 (recap)" }
+                ]
+            }
+        };
 
-<script>
-/** 
- * VOCABULARY DATA 
- * Format: "Character|Pinyin"
- * Note: To fit 600 words in one file, they are stored as strings. 
- */
-const DATA = {
-    P1: "一|yī,二|èr,三|sān,四|sì,五|wǔ,六|liù,七|qī,八|bā,九|jiǔ,十|shí,口|kǒu,耳|ěr,目|mù,手|shǒu,足|zú,大|dà,小|xiǎo,多|duō,少|shǎo,人|rén,头|tóu,发|fà,长|cháng,短|duǎn,早|zǎo,晚|wǎn,去|qù,来|lái,上|shàng,下|xià,里|lǐ,外|wài,坐|zuò,立|lì,走|zǒu,跑|pǎo,跳|tiào,笑|xiào,哭|kū,叫|jiào,听|tīng,说|shuō,读|dú,写|xiě,看|kàn,见|jiàn,开|kāi,关|guān,红|hóng,黄|huáng,蓝|lán,绿|lǜ,白|bái,黑|hēi,天|tiān,地|dì,山|shān,水|shuǐ,火|huǒ,石|shí,田|tián,土|tǔ,木|mù,禾|hé,云|yún,雨|yǔ,风|fēng,鸟|niǎo,鱼|yú,虫|chóng,爸|bà,妈|mā,哥|gē,姐|jiě,弟|dì,妹|mèi,我|wǒ,你|nǐ,他|tā,爱|ài,家|jiā,校|xiào,书|shū,笔|bǐ,本|běn,学|xué,生|shēng,师|shī,友|yǒu,园|yuán,草|cǎo,花|huā,树|shù,月|yuè,心|xīn,春|chūn,夏|xià,秋|qiū,冬|dōng",
-    P2: "漂亮|piào liang,刚才|gāng cái,特别|tè bié,总是|zǒng shì,帮忙|bāng máng,应该|yīng gāi,检查|jiǎn chá,注意|zhù yì,故事|gù shi,准备|zhǔn bèi,发现|fā xiàn,干净|gān jìng,身体|shēn tǐ,比较|bǐ jiào,休息|xiū xi,已经|yǐ jīng,决定|jué dìng,表演|biǎo yǎn,努力|nǔ lì,进步|jìn bù,礼物|lǐ wù,快乐|kuài lè,附近|fù jìn,明白|míng bai,照顾|zhào gù,奇怪|qí guài,虽然|suī rán,其实|qí shí,愿意|yuàn yì,希望|xī wàng,练习|liàn xí,突然|tū rán,办法|bàn fǎ,欢迎|huān yíng,有趣|yǒu qù,方便|fāng biàn,不仅|bù jǐn,而且|ér qiě,保护|bǎo hù,浪费|làng fèi,环境|huán jìng,改变|gǎi biàn,精彩|jīng cǎi,感谢|gǎn xiè,极了|jí le,离开|lí kāi,意思|yì si,认真|rèn zhēn,习惯|xí guàn,健康|jiàn kāng,强壮|qiáng zhuàng,懂事|dǒng shì,礼貌|lǐ mào,颜色|yán sè,讨论|tǎo lùn,容易|róng yì,开始|kāi shǐ,结束|jié shù,满意|mǎn yì,害怕|hài pà,勇敢|yǒng gǎn,难过|nán guò,着急|zháo jí,发烧|fā shāo,感冒|gǎn mào,医生|yī shēng,洗澡|xǐ zǎo,走路|zǒu lù,马路|mǎ lù,回答|huí dá,声音|shēng yīn,经常|jīng cháng,重要|zhòng yào,打算|dǎ suàn,森林|sēn lín,动物|dòng wù,美丽|měi lì,有名|yǒu míng,各种|gè zhǒng,时间|shí jiān,节日|jié rì,月亮|yuè liang,星星|xīng xing,觉得|jué de,睡觉|shuì jiào,起床|qǐ chuáng,商场|shāng chǎng,超市|chāo shì,面包|miàn bāo,牛奶|niú nǎi,水果|shuǐ guǒ,苹果|píng guǒ,香蕉|xiāng jiāo,葡萄|pú tao,西瓜|xī guā,好吃|hǎo chī,喝茶|hē chá,点心|diǎn xin,比赛|bǐ sài",
-    P3: "介绍|jiè shào,刚才|gāng cái,不仅|bù jǐn,由于|yóu yú,尤其|yóu qí,甚至|shèn zhì,核心|hé xīn,尽管|jǐn guǎn,难道|nán dào,其实|qí shí,通过|tōng guò,既然|jì rán,甚至|shèn zhì,哪怕|nǎ pà,总之|zǒng zhī,果然|guǒ rán,竟然|jìng rán,终于|zhōng yú,依然|yī rán,依然|yī rán,果然|guǒ rán,仍然|réng rán,必须|bì xū,不必|bù bì,何必|hé bì,未必|wèi bì,必定|bì dìng,大概|dà gài,也许|yě xǔ,恐怕|kǒng pà,几乎|jī hū,稍微|shāo wēi,格外|gé wài,互相|hù xiāng,各自|gè zì,首先|shǒu xiān,其次|qí cì,最后|zuì hòu,反正|fǎn zhèng,难怪|nán guài,幸亏|xìng kuī,索性|suǒ xìng,宁愿|nìng yuàn,反而|fǎn ér,顺便|shùn biàn,赶快|gǎn kuài,立刻|lì kè,连忙|lián máng,渐渐|jiàn jiàn,偷偷|tōu tōu,悄悄|qiāo qiāo,刚好|gāng hǎo,恰好|qià hǎo,千万|qiān wàn,大概|dà gài,大约|dà yuē,也许|yě xǔ,恐怕|kǒng pà,反而|fǎn ér,而且|ér qiě,还是|hái shì,或者|huò zhě,由于|yóu yú,因此|yīn cǐ,从而|cóng ér,既然|jì rán,于是|yú shì,虽然|suī rán,即使|jí shǐ,哪怕|nǎ pà,尽管|jǐn guǎn,只要|zhǐ yào,只有|zhǐ yǒu,除非|chú fēi,不论|bù lùn,不论|bù lùn,不管|bù guǎn,凡是|fán shì,不仅|bù jǐn,反而|fǎn ér,此外|cǐ wài,另外|lìng wài,况且|kuàng qiě,甚至|shèn zhì,总之|zǒng zhī,总之|zǒng zhī,综上|zōng shàng,可见|kě jiàn,难怪|nán guài,既然|jì rán,即便|jí biàn,虽然|suī rán,尽管|jǐn guǎn,依然|yī rán,依旧|yī jiù,总是|zǒng shì,竟然|jìng rán,居然|jū rán,难道|nán dào,何必|hé bì",
-    P4: "拒绝|jù jué,挑选|tiāo xuǎn,仔细|zǐ xì,清楚|qīng chu,记录|jì lù,建议|jiàn yì,羡慕|xiàn mù,谦虚|qiān xū,骄傲|jiāo ào,压力|yā lì,确定|què dìng,尤其|yóu qí,简直|jiǎn zhí,负责|fù zé,困难|kùn nan,不仅|bù jǐn,克服|kè fú,勇气|yǒng qì,智慧|zhì huì,珍惜|zhēn xī,判断|pàn duàn,思考|sī kǎo,精彩|jīng cǎi,讨论|tǎo lùn,项目|xiàng mù,甚至|shèn zhì,虽然|suī rán,由于|yóu yú,而且|ér qiě,竟然|jìng rán,果然|guǒ rán,通过|tōng guò,哪怕|nǎ pà,既然|jì rán,总之|zǒng zhī,仍然|réng rán,必定|bì dìng,大概|dà gài,恐怕|kǒng pà,稍微|shāo wēi,互相|hù xiāng,各自|gè zì,首先|shǒu xiān,其次|qí cì,最后|zuì hòu,其实|qí shí,依然|yī rán,依然|yī rán,甚至|shèn zhì,果然|guǒ rán,千万|qiān wàn,关于|guān yú,对于|duì yú,随着|suí zhe,按照|àn zhào,由于|yóu yú,除了|chú le,通过|tōng guò,基于|jī yú,根据|gēn jù,直到|zhí dào,至于|zhì yú,哪怕|nǎ pà,即便|jí biàn,甚至|shèn zhì,既然|jì rán,于是|yú shì,虽然|suī rán,尽管|jǐn guǎn,只要|zhǐ yào,只有|zhǐ yǒu,除非|chú fēi,不论|bù lùn,不管|bù guǎn,凡是|fán shì,反而|fǎn ér,此外|cǐ wài,另外|lìng wài,况且|kuàng qiě,难怪|nán guài,幸亏|xìng kuī,索性|suǒ xìng,宁愿|nìng yuàn,反而|fǎn ér,顺便|shùn biàn,赶快|gǎn kuài,立刻|lì kè,连忙|lián máng,渐渐|jiàn jiàn,偷偷|tōu tōu,悄悄|qiāo qiāo,刚好|gāng hǎo,恰好|qià hǎo,大约|dà yuē,也许|yě xǔ,恐怕|kǒng pà,然而|rán ér,否则|fǒu zé,虽然|suī rán",
-    P5: "坚持|jiān chí,鼓励|gǔ lì,克服|kè fú,羞愧|xiū kuì,勇敢|yǒng gǎn,勤奋|qín fèn,压力|yā lì,目标|mù biāo,配合|pèi hé,竞赛|jìng sài,探险|tàn xiǎn,简单|jiǎn dān,防止|fáng zhǐ,珍惜|zhēn xī,拒绝|jù jué,建议|jiàn yì,清楚|qīng chu,记录|jì lù,负责|fù zé,历史|lì shǐ,吸引|xī yǐn,仔细|zǐ xì,确定|què dìng,允许|yǔn xǔ,祝贺|zhù hè,羡慕|xiàn mù,宽容|kuān róng,谦虚|qiān xū,放弃|fàng qì,解释|jiě shì,顺利|shùn lì,难道|nán dào,其实|qí shí,恐怕|kǒng pà,稍微|shāo wēi,智慧|zhì huì,积极|jī jí,锻炼|duàn liàn,严格|yán gé,毕竟|bì jìng,核心|hé xīn,暂时|zàn shí,由于|yóu yú,竟然|jìng rán,通过|tōng guò,果然|guǒ rán,尤其|yóu qí,甚至|shèn zhì,尽管|jǐn guǎn,不论|bù lùn,凡是|fán shì,不仅|bù jǐn,反而|fǎn ér,此外|cǐ wài,另外|lìng wài,况且|kuàng qiě,总之|zǒng zhī,可见|kě jiàn,难怪|nán guài,幸亏|xìng kuī,索性|suǒ xìng,宁愿|nìng yuàn,反而|fǎn ér,顺便|shùn biàn,赶快|gǎn kuài,立刻|lì kè,连忙|lián máng,渐渐|jiàn jiàn,偷偷|tōu tōu,悄悄|qiāo qiāo,刚好|gāng hǎo,恰好|qià hǎo,千万|qiān wàn,大概|dà gài,大约|dà yuē,也许|yě xǔ,假如|jiǎ rú,要是|yào shi,即使|jí shǐ,哪怕|nǎ pà,既然|jì rán,于是|yú shì,甚至|shèn zhì,尤其|yóu qí,其中|qí zhōng,由于|yóu yú,因此|yīn cǐ,从而|cóng ér,尽管|jǐn guǎn,虽然|suī rán,还是|hái shì,或者|huò zhě,不论|bù lùn,不管|bù guǎn,无论|wú lùn,凡是|fán shì,核心|hé xīn,重点|zhòng diǎn,根本|gēn běn,关键|guān jiàn,毕竟|bì jìng",
-    P6: "鞠躬|jū gōng,和睦|hé mù,矛盾|máo dùn,关键|guān jiàn,遗憾|yí hàn,犹豫|yóu yù,复杂|fù zá,即使|jí shǐ,哪怕|nǎ pà,谨慎|jǐn shèn,智慧|zhì huì,积极|jī jí,核心|hé xīn,挑战|tiǎo zhàn,锻炼|duàn liàn,奋斗|fèn dòu,既然|jì rán,甚至|shèn zhì,尽管|jǐn guǎn,毕竟|bì jìng,通过|tōng guò,由于|yóu yú,其实|qí shí,果然|guǒ rán,不仅|bù jǐn,而且|ér qiě,因此|yīn cǐ,反而|fǎn ér,何况|hé kuàng,除非|chú fēi,假如|jiǎ rú,按照|àn zhào,基于|jī yú,针对|zhēn duì,关于|guān yú,对于|duì yú,随着|suí zhe,甚至|shèn zhì,尤其|yóu qí,其中|qí zhōng,难怪|nán guài,幸亏|xìng kuī,千万|qiān wàn,必定|bì dìng,未必|wèi bì,何必|hé bì,总之|zǒng zhī,由此可见|yóu cǐ kě jiàn,综上所述|zōng shàng suǒ shù,积极|jī jí,消极|xiāo jí,悲观|bēi guān,乐观|lè guān,勤奋|qín fèn,懒惰|lǎn duò,谦虚|qiān xū,骄傲|jiāo ào,吝啬|lìn sè,大方|dà fāng,温柔|wēn róu,粗鲁|cū lǔ,诚实|chéng shí,虚伪|xū wěi,坚定|jiān dìng,动摇|dòng yáo,平凡|píng fán,卓越|zhuó yuè,核心|hé xīn,外围|wài wéi,根本|gēn běn,枝节|zhī jié,甚至|shèn zhì,反而|fǎn ér,固然|gù rán,由于|yóu yú,因此|yīn cǐ,既然|jì rán,哪怕|nǎ pà,即使|jí shǐ,除非|chú fēi,由于|yóu yú,导致|dǎo zhì,基于|jī yú,综上|zōng shàng,显然|xiǎn rán,竟然|jìng rán,由于|yóu yú,毕竟|bì jìng,哪怕|nǎ pà,纵然|zòng rán,即便|jí biàn,无论|wú lùn,不管|bù guǎn,不仅|bù jǐn,况且|kuàng qiě,甚至|shèn zhì,总之|zǒng zhī,果然|guǒ rán,竟然|jìng rán"
-};
+        // WEB AUDIO SYSTEM FOR COOL SYNTH EFFECTS
+        const AudioEngine = {
+            ctx: null,
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            },
+            playSelect() {
+                if (gameConfig.isMuted || !this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+                osc.frequency.setValueAtTime(900, this.ctx.currentTime + 0.04);
+                gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.1);
+            },
+            playHit() {
+                if (gameConfig.isMuted || !this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1300, this.ctx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.25);
+            },
+            playMiss() {
+                if (gameConfig.isMuted || !this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, this.ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(60, this.ctx.currentTime + 0.35);
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.35);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.35);
+            },
+            playLevelUp() {
+                if (gameConfig.isMuted || !this.ctx) return;
+                const playTone = (freq, delay, dur) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime + delay);
+                    gain.gain.setValueAtTime(0.15, this.ctx.currentTime + delay);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + delay + dur);
+                    osc.start(this.ctx.currentTime + delay);
+                    osc.stop(this.ctx.currentTime + delay + dur);
+                };
+                playTone(523.25, 0, 0.2); // C5
+                playTone(659.25, 0.1, 0.2); // E5
+                playTone(783.99, 0.2, 0.2); // G5
+                playTone(1046.50, 0.3, 0.4); // C6
+            },
+            playCoin() {
+                if (gameConfig.isMuted || !this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.frequency.setValueAtTime(987.77, this.ctx.currentTime); 
+                osc.frequency.setValueAtTime(1318.51, this.ctx.currentTime + 0.08); 
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.22);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.22);
+            },
+            playExplosion() {
+                if (gameConfig.isMuted || !this.ctx) return;
+                
+                const bufferSize = this.ctx.sampleRate * 0.4;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+                
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(800, this.ctx.currentTime);
+                filter.frequency.exponentialRampToValueAtTime(50, this.ctx.currentTime + 0.4);
 
-const video = document.getElementById('webcam');
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const hud = document.getElementById('hud');
-const targetBox = document.getElementById('target-box');
-const scoreBox = document.getElementById('score-box');
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
 
-let gameActive = false;
-let currentLvl = "P1";
-let score = 0;
-let deck = [];
-let target = null;
-let floatingWords = [];
-let mouth = { x: 0, y: 0, open: false };
-let audioCtx = null;
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+                noise.start();
+            }
+        };
 
-class Word {
-    constructor(obj) {
-        this.char = obj.w;
-        this.reset();
-    }
-    reset() {
-        this.x = Math.random() * (window.innerWidth - 150) + 75;
-        this.y = Math.random() * (window.innerHeight - 250) + 200;
-        let s = 4 + (currentLvl.at(-1) * 0.8);
-        this.vx = (Math.random() - 0.5) * s;
-        this.vy = (Math.random() - 0.5) * s;
-    }
-    update() {
-        this.x += this.vx; this.y += this.vy;
-        if (this.x < 50 || this.x > window.innerWidth - 120) this.vx *= -1;
-        if (this.y < 180 || this.y > window.innerHeight - 50) this.vy *= -1;
-    }
-    draw() {
-        ctx.font = 'bold 45px sans-serif';
-        ctx.shadowColor = "black"; ctx.shadowBlur = 10;
-        ctx.fillStyle = "white";
-        ctx.fillText(this.char, this.x, this.y);
-        ctx.shadowBlur = 0;
-    }
-}
+        // CURRENT GAME STATE
+        const gameConfig = {
+            selectedLevel: 'P5',
+            selectedStream: 'standard',
+            selectedControl: 'eat',
+            selectedRule: 'timed',
+            isMuted: false,
+            score: 0,
+            metricVal: 60,
+            gameLevel: 1,
+            lastBonusThreshold: 0, 
+            gameState: 'setup', 
+            masteredWords: new Set()
+        };
 
-function speak(t) {
-    window.speechSynthesis.cancel();
-    let m = new SpeechSynthesisUtterance(t);
-    m.lang = 'zh-CN'; m.rate = 0.8;
-    window.speechSynthesis.speak(m);
-}
+        // SELECT SETUP MODES DYNAMICALLY WITH STYLISH AND UNMISTAKABLE SELECTION UI
+        const setupSelector = (groupClass, configKey) => {
+            const buttons = document.querySelectorAll(`.${groupClass}`);
+            buttons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    AudioEngine.init();
+                    AudioEngine.playSelect();
+                    
+                    // Reset all sibling buttons to clean inactive style
+                    buttons.forEach(b => {
+                        b.className = `${groupClass} py-2 px-3 bg-white text-stone-700 border-2 border-stone-300 rounded-xl font-bold transition-all text-sm hover:border-orange-500`;
+                    });
+                    
+                    // Style the selected button with beautiful high-contrast design
+                    btn.className = `${groupClass} py-2 px-3 bg-orange-500 text-white ring-4 ring-orange-300 border-orange-600 scale-105 shadow-md rounded-xl font-bold transition-all text-sm`;
+                    
+                    gameConfig[configKey] = btn.getAttribute('data-val');
+                });
+            });
+        };
 
-function playSfx(f) {
-    if(!audioCtx) return;
-    let o = audioCtx.createOscillator(), g = audioCtx.createGain();
-    o.frequency.value = f; g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-    o.connect(g); g.connect(audioCtx.destination);
-    o.start(); o.stop(audioCtx.currentTime + 0.3);
-}
+        // Initialize selectors
+        setupSelector('level-btn', 'selectedLevel');
+        setupSelector('stream-btn', 'selectedStream');
+        setupSelector('control-btn', 'selectedControl');
+        setupSelector('rule-btn', 'selectedRule');
 
-function nextRound() {
-    if (deck.length === 0) {
-        deck = DATA[currentLvl].split(',').map(s => {
-            let [w, p] = s.split('|'); return {w, p};
-        }).sort(() => Math.random() - 0.5);
-    }
-    target = deck.pop();
-    targetBox.innerText = target.p;
-    speak(target.w);
-
-    let levelFullSet = DATA[currentLvl].split(',').map(s => s.split('|')[0]);
-    let distractors = levelFullSet.filter(c => c !== target.w).sort(() => Math.random() - 0.5).slice(0, 10);
-    floatingWords = [target.w, ...distractors].sort(() => Math.random() - 0.5).map(c => new Word({w:c}));
-}
-
-async function initGame(lvl) {
-    currentLvl = lvl;
-    audioCtx = new AudioContext();
-    document.getElementById('menu').classList.add('hidden');
-    hud.classList.remove('hidden');
-    gameActive = true;
-    await camera.start();
-    nextRound();
-}
-
-function onResults(res) {
-    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-    ctx.save();
-    ctx.scale(-1, 1); ctx.translate(-canvas.width, 0);
-    ctx.drawImage(res.image, 0, 0, canvas.width, canvas.height);
-    ctx.restore();
-
-    if (res.multiFaceLandmarks?.[0]) {
-        let l = res.multiFaceLandmarks[0];
-        mouth.x = (1 - l[13].x) * canvas.width;
-        mouth.y = l[13].y * canvas.height;
-        mouth.open = Math.abs(l[13].y - l[14].y) > 0.045;
-
-        ctx.beginPath(); ctx.arc(mouth.x, mouth.y, 40, 0, 7);
-        ctx.strokeStyle = mouth.open ? "#00ff88" : "white";
-        ctx.lineWidth = 5; ctx.stroke();
-    }
-
-    if (gameActive) {
-        floatingWords.forEach(w => {
-            w.update(); w.draw();
-            if (mouth.open && Math.hypot(mouth.x - (w.x + 30), mouth.y - (w.y - 20)) < 70) {
-                if (w.char === target.w) { score += 10; playSfx(800); nextRound(); }
-                else { score = Math.max(0, score - 5); playSfx(150); w.reset(); }
-                scoreBox.innerText = `Score: ${score}`;
-                mouth.open = false;
+        // AUDIO SWITCH TOGGLE
+        const muteBtn = document.getElementById('muteBtn');
+        const muteIcon = document.getElementById('muteIcon');
+        muteBtn.addEventListener('click', () => {
+            gameConfig.isMuted = !gameConfig.isMuted;
+            if (gameConfig.isMuted) {
+                muteIcon.className = "fa-solid fa-volume-xmark text-lg text-stone-400";
+            } else {
+                muteIcon.className = "fa-solid fa-volume-high text-lg text-orange-600";
+                AudioEngine.init();
+                AudioEngine.playSelect();
             }
         });
-    }
-}
 
-const faceMesh = new FaceMesh({locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`});
-faceMesh.setOptions({maxNumFaces:1, refineLandmarks:true, minDetectionConfidence:0.5});
-faceMesh.onResults(onResults);
+        // DRAWER SYSTEM
+        const historyDrawer = document.getElementById('historyDrawer');
+        document.getElementById('toggleHistoryBtn').addEventListener('click', () => {
+            AudioEngine.init();
+            AudioEngine.playSelect();
+            historyDrawer.classList.remove('translate-x-full');
+        });
+        document.getElementById('closeDrawerBtn').addEventListener('click', () => {
+            AudioEngine.playSelect();
+            historyDrawer.classList.add('translate-x-full');
+        });
 
-const camera = new Camera(video, {
-    onFrame: async () => { await faceMesh.send({image: video}); },
-    width: 1280, height: 720
-});
+        // WEBCAM & GRAPHICS LOOP INITIALIZATION
+        const videoElement = document.getElementById('webcam');
+        const canvasElement = document.getElementById('gameCanvas');
+        const canvasCtx = canvasElement.getContext('2d');
+        const mainContainer = document.getElementById('mainContainer');
+        let cameraModule = null;
+        let faceMeshModule = null;
+        let animationFrameId = null;
 
-window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
-</script>
+        let activeWords = [];
+        let targetWordObj = null;
+        let mouthPosition = { x: 0, y: 0, isOpen: false, diameter: 0 };
+        let timerInterval = null;
+
+        // Graphic screen shake controller
+        let isScreenShaking = false;
+        let shakeEndTime = 0;
+
+        function triggerScreenShake() {
+            isScreenShaking = true;
+            shakeEndTime = Date.now() + 400; 
+            const container = document.getElementById('gameArea');
+            container.classList.add('shake-screen');
+            setTimeout(() => {
+                container.classList.remove('shake-screen');
+                isScreenShaking = false;
+            }, 400);
+        }
+
+        // Particle system
+        let particles = [];
+        class Particle {
+            constructor(x, y, char, color) {
+                this.x = x;
+                this.y = y;
+                this.char = char;
+                this.vx = (Math.random() - 0.5) * 8;
+                this.vy = (Math.random() - 0.5) * 8 - 4;
+                this.alpha = 1.0;
+                this.scale = Math.random() * 0.5 + 0.8;
+                this.color = color || "#10B981";
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.25; 
+                this.alpha -= 0.025;
+            }
+            draw(ctx) {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.alpha);
+                ctx.fillStyle = this.color;
+                ctx.font = `bold ${28 * this.scale}px sans-serif`;
+                ctx.fillText(this.char, this.x, this.y);
+                ctx.restore();
+            }
+        }
+
+        // Gold Rush basket and drop items
+        let fallingItems = [];
+        let basketPosition = { x: 0, y: 0, width: 130, height: 40 };
+
+        class DropItem {
+            constructor(width) {
+                this.x = Math.random() * (width - 60) + 30;
+                this.y = -30;
+                this.vy = Math.random() * 3 + 3; 
+                this.isBomb = Math.random() < 0.35; 
+                this.radius = this.isBomb ? 22 : 18;
+                this.rotation = Math.random() * Math.PI;
+                this.rotSpeed = (Math.random() - 0.5) * 0.1;
+            }
+            update() {
+                this.y += this.vy;
+                this.rotation += this.rotSpeed;
+            }
+            draw(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+
+                if (this.isBomb) {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = "#1e1b4b";
+                    ctx.fill();
+                    ctx.fillStyle = "#1e1b4b";
+                    for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
+                        ctx.save();
+                        ctx.rotate(a);
+                        ctx.beginPath();
+                        ctx.moveTo(0, -this.radius);
+                        ctx.lineTo(-6, -this.radius - 8);
+                        ctx.lineTo(6, -this.radius - 8);
+                        ctx.closePath();
+                        ctx.fill();
+                        ctx.restore();
+                    }
+                    ctx.beginPath();
+                    ctx.arc(0, -this.radius, 4, 0, Math.PI * 2);
+                    ctx.fillStyle = "#f59e0b";
+                    ctx.fill();
+                } else {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = "#f59e0b";
+                    ctx.fill();
+                    ctx.lineWidth = 3;
+                    ctx.strokeStyle = "#78350f";
+                    ctx.stroke();
+
+                    ctx.fillStyle = "#fef08a";
+                    ctx.fillRect(-6, -6, 12, 12);
+                    ctx.strokeRect(-6, -6, 12, 12);
+                }
+                ctx.restore();
+            }
+        }
+
+        // SYSTEM SPEECH ENGINE (TEXT-TO-SPEECH)
+        function speakWord(text) {
+            if (gameConfig.isMuted) return;
+            window.speechSynthesis.cancel();
+            const msg = new SpeechSynthesisUtterance();
+            msg.text = text;
+            msg.lang = 'zh-CN';
+            
+            const voices = window.speechSynthesis.getVoices();
+            const preferredVoice = voices.find(v => v.lang.includes('zh-CN') || v.lang.includes('zh-SG'));
+            if (preferredVoice) msg.voice = preferredVoice;
+            
+            window.speechSynthesis.speak(msg);
+        }
+
+        document.getElementById('speakTargetBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (targetWordObj && gameConfig.gameState === 'playing') speakWord(targetWordObj.word);
+        });
+
+        // TARGET SYSTEM INTERACTIVE CONTROLS
+        let pointerPos = { x: 0, y: 0, clicked: false };
+        const setPointerPosFromEvent = (e) => {
+            const rect = canvasElement.getBoundingClientRect();
+            let clientX, clientY;
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            pointerPos.x = clientX - rect.left;
+            pointerPos.y = clientY - rect.top;
+        };
+
+        canvasElement.addEventListener('mousemove', setPointerPosFromEvent);
+        canvasElement.addEventListener('mousedown', (e) => {
+            setPointerPosFromEvent(e);
+            pointerPos.clicked = true;
+        });
+        canvasElement.addEventListener('mouseup', () => {
+            pointerPos.clicked = false;
+        });
+        canvasElement.addEventListener('touchmove', (e) => {
+            setPointerPosFromEvent(e);
+        });
+        canvasElement.addEventListener('touchstart', (e) => {
+            setPointerPosFromEvent(e);
+            pointerPos.clicked = true;
+        });
+        canvasElement.addEventListener('touchend', () => {
+            pointerPos.clicked = false;
+        });
+
+        // INITIATE ACTIVE PLAY SESSIONS
+        document.getElementById('startGameBtn').addEventListener('click', async () => {
+            AudioEngine.init();
+            AudioEngine.playSelect();
+            initGame();
+        });
+
+        document.getElementById('replayBtn').addEventListener('click', () => {
+            AudioEngine.playSelect();
+            initGame();
+        });
+
+        document.getElementById('toMenuBtn').addEventListener('click', () => {
+            AudioEngine.playSelect();
+            stopGameAndTracking();
+            document.getElementById('gameOverScreen').classList.add('hidden');
+            document.getElementById('setupScreen').classList.remove('hidden');
+            gameConfig.gameState = 'setup';
+        });
+
+        async function initGame() {
+            gameConfig.score = 0;
+            gameConfig.gameLevel = 1;
+            gameConfig.lastBonusThreshold = 0;
+            gameConfig.gameState = 'playing';
+            
+            document.getElementById('scoreDisplay').innerText = "0";
+            document.getElementById('gameLevelDisplay').innerText = "1";
+            document.getElementById('setupScreen').classList.add('hidden');
+            document.getElementById('gameOverScreen').classList.add('hidden');
+            document.getElementById('gameArea').classList.remove('hidden');
+
+            const vocabulary = vocabularyDatabase[gameConfig.selectedLevel]?.[gameConfig.selectedStream] || vocabularyDatabase['P5']['standard'];
+            
+            activeWords = [];
+            
+            // Randomly select 6-8 words from the comprehensive level list to spawn dynamically
+            const spawnCount = Math.min(8, vocabulary.length);
+            const chosenIndices = [];
+            while (chosenIndices.length < spawnCount) {
+                const randIndex = Math.floor(Math.random() * vocabulary.length);
+                if (!chosenIndices.includes(randIndex)) {
+                    chosenIndices.push(randIndex);
+                }
+            }
+
+            chosenIndices.forEach(idx => {
+                activeWords.push(createWordElement(vocabulary[idx]));
+            });
+
+            pickNewTargetWord();
+
+            if (gameConfig.selectedRule === 'timed') {
+                gameConfig.metricVal = 60;
+                document.getElementById('metricLabel').innerText = "时间 TIMER:";
+                document.getElementById('metricDisplay').innerText = gameConfig.metricVal;
+                document.getElementById('metricCard').classList.remove('hidden');
+            } else if (gameConfig.selectedRule === 'points') {
+                gameConfig.metricVal = 150;
+                document.getElementById('metricLabel').innerText = "目标 GOAL:";
+                document.getElementById('metricDisplay').innerText = `${gameConfig.score}/150`;
+                document.getElementById('metricCard').classList.remove('hidden');
+            } else {
+                document.getElementById('metricCard').classList.add('hidden');
+            }
+
+            clearInterval(timerInterval);
+            if (gameConfig.selectedRule === 'timed') {
+                timerInterval = setInterval(() => {
+                    if (gameConfig.gameState === 'playing') {
+                        gameConfig.metricVal--;
+                        document.getElementById('metricDisplay').innerText = gameConfig.metricVal;
+                        if (gameConfig.metricVal <= 0) {
+                            endGame();
+                        }
+                    }
+                }, 1000);
+            }
+
+            if (gameConfig.selectedControl === 'eat') {
+                document.getElementById('cameraLoading').classList.remove('hidden');
+                videoElement.classList.remove('hidden');
+                await setupFaceMeshTracking();
+            } else {
+                document.getElementById('cameraLoading').classList.add('hidden');
+                videoElement.classList.add('hidden');
+                start2DAnimationLoop();
+            }
+        }
+
+        function createWordElement(vocabObj) {
+            return {
+                word: vocabObj.word,
+                pinyin: vocabObj.pinyin,
+                translation: vocabObj.translation,
+                x: Math.random() * (canvasElement.width ? canvasElement.width - 200 : window.innerWidth - 300) + 100,
+                y: Math.random() * (canvasElement.height ? canvasElement.height - 200 : window.innerHeight - 400) + 100,
+                vx: (Math.random() - 0.5) * 3,
+                vy: (Math.random() - 0.5) * 3,
+                radius: 45 + vocabObj.word.length * 8,
+                color: getRandomBubbleColor()
+            };
+        }
+
+        function getRandomBubbleColor() {
+            const colors = ['#f43f5e', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        function pickNewTargetWord() {
+            if (activeWords.length === 0) return;
+            const chosen = activeWords[Math.floor(Math.random() * activeWords.length)];
+            targetWordObj = chosen;
+            
+            document.getElementById('targetWordText').innerText = chosen.pinyin;
+            document.getElementById('targetWordTranslation').innerText = chosen.translation;
+            document.getElementById('placardCategory').innerText = "根据拼音找出词语 Find by Pinyin:";
+
+            setTimeout(() => {
+                speakWord(chosen.word);
+            }, 250);
+        }
+
+        // WEB CAMERA GEOMETRIC TRACKING SETUP
+        async function setupFaceMeshTracking() {
+            if (faceMeshModule) {
+                document.getElementById('cameraLoading').classList.add('hidden');
+                return;
+            }
+
+            faceMeshModule = new FaceMesh({
+                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+            });
+
+            faceMeshModule.setOptions({
+                maxNumFaces: 1,
+                refineLandmarks: true,
+                minDetectionConfidence: 0.6,
+                minTrackingConfidence: 0.6
+            });
+
+            faceMeshModule.onResults(onMeshTrackingFrame);
+
+            cameraModule = new Camera(videoElement, {
+                onFrame: async () => {
+                    if (gameConfig.gameState === 'playing' || gameConfig.gameState === 'bonus') {
+                        await faceMeshModule.send({ image: videoElement });
+                    }
+                },
+                width: 640,
+                height: 480
+            });
+
+            try {
+                await cameraModule.start();
+                document.getElementById('cameraLoading').classList.add('hidden');
+            } catch (err) {
+                console.error("Camera initialisation failure: ", err);
+                document.getElementById('cameraLoading').innerHTML = `
+                    <div class="text-red-500 text-5xl mb-3"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <h3 class="text-xl font-bold">无法访问摄像头 Camera Failed</h3>
+                    <p class="text-stone-400 max-w-md text-center">We couldn't open your webcam. Please allow camera permissions, or select "Tap the Words" mode in the setup screen to play immediately!</p>
+                    <button onclick="location.reload()" class="bg-orange-500 hover:bg-orange-600 px-6 py-2 rounded-xl font-bold mt-4">Refresh Page</button>
+                `;
+            }
+        }
+
+        // CORE RECURSIVE RENDER CONTROLLER
+        function onMeshTrackingFrame(results) {
+            matchCanvasSizing();
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+
+            if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+                const landmarks = results.multiFaceLandmarks[0];
+                const upperInnerLip = landmarks[13];
+                const lowerInnerLip = landmarks[14];
+                const cornerLeft = landmarks[61];
+                const cornerRight = landmarks[291];
+
+                const distanceY = Math.abs(upperInnerLip.y - lowerInnerLip.y);
+                const widthX = Math.abs(cornerLeft.x - cornerRight.x);
+                
+                mouthPosition.x = (1 - upperInnerLip.x) * canvasElement.width;
+                mouthPosition.y = upperInnerLip.y * canvasElement.height;
+                
+                const openRatio = distanceY / (widthX || 1);
+                mouthPosition.isOpen = openRatio > 0.18;
+                mouthPosition.diameter = 30 + (openRatio * 150);
+            }
+
+            if (gameConfig.gameState === 'playing') {
+                runVocabMainLoop();
+            } else if (gameConfig.gameState === 'bonus') {
+                runGoldRushMiniGameLoop();
+            }
+        }
+
+        function start2DAnimationLoop() {
+            matchCanvasSizing();
+            
+            function tick() {
+                if (gameConfig.gameState === 'playing') {
+                    canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+                    runVocabMainLoop();
+                    animationFrameId = requestAnimationFrame(tick);
+                } else if (gameConfig.gameState === 'bonus') {
+                    canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+                    runGoldRushMiniGameLoop();
+                    animationFrameId = requestAnimationFrame(tick);
+                }
+            }
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            animationFrameId = requestAnimationFrame(tick);
+        }
+
+        function matchCanvasSizing() {
+            if (canvasElement.width !== canvasElement.parentElement.clientWidth || 
+                canvasElement.height !== canvasElement.parentElement.clientHeight) {
+                canvasElement.width = canvasElement.parentElement.clientWidth;
+                canvasElement.height = canvasElement.parentElement.clientHeight;
+                
+                activeWords.forEach(w => {
+                    if (w.x > canvasElement.width) w.x = canvasElement.width - 150;
+                    if (w.y > canvasElement.height) w.y = canvasElement.height - 150;
+                });
+            }
+        }
+
+        // MAIN VOCABULARY GAMEPLAY RENDER TICK
+        function runVocabMainLoop() {
+            let trackerX = 0, trackerY = 0, isInteracting = false, chompRadius = 25;
+
+            if (gameConfig.selectedControl === 'eat') {
+                trackerX = mouthPosition.x;
+                trackerY = mouthPosition.y;
+                isInteracting = mouthPosition.isOpen;
+                chompRadius = mouthPosition.diameter;
+            } else {
+                trackerX = pointerPos.x;
+                trackerY = pointerPos.y;
+                isInteracting = pointerPos.clicked;
+                chompRadius = 35;
+            }
+
+            activeWords.forEach(wordObj => {
+                const multiplier = 1 + (gameConfig.gameLevel - 1) * 0.35;
+                wordObj.x += wordObj.vx * multiplier;
+                wordObj.y += wordObj.vy * multiplier;
+
+                if (wordObj.x - wordObj.radius < 0) {
+                    wordObj.x = wordObj.radius;
+                    wordObj.vx *= -1;
+                }
+                if (wordObj.x + wordObj.radius > canvasElement.width) {
+                    wordObj.x = canvasElement.width - wordObj.radius;
+                    wordObj.vx *= -1;
+                }
+                if (wordObj.y - wordObj.radius < 0) {
+                    wordObj.y = wordObj.radius;
+                    wordObj.vy *= -1;
+                }
+                if (wordObj.y + wordObj.radius > canvasElement.height) {
+                    wordObj.y = canvasElement.height - wordObj.radius;
+                    wordObj.vy *= -1;
+                }
+
+                canvasCtx.save();
+                canvasCtx.shadowBlur = 12;
+                canvasCtx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+                
+                canvasCtx.beginPath();
+                canvasCtx.arc(wordObj.x, wordObj.y, wordObj.radius, 0, Math.PI * 2);
+                canvasCtx.fillStyle = wordObj.color;
+                canvasCtx.fill();
+                
+                canvasCtx.lineWidth = 4;
+                canvasCtx.strokeStyle = "#ffffff";
+                canvasCtx.stroke();
+                canvasCtx.restore();
+
+                // Display written Chinese characters in bubbles
+                canvasCtx.fillStyle = '#ffffff';
+                canvasCtx.font = `bold ${32 + (wordObj.word.length > 3 ? -6 : 0)}px sans-serif`;
+                canvasCtx.textAlign = 'center';
+                canvasCtx.textBaseline = 'middle';
+                canvasCtx.fillText(wordObj.word, wordObj.x, wordObj.y);
+
+                const dx = trackerX - wordObj.x;
+                const dy = trackerY - wordObj.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+
+                if (dist < wordObj.radius + chompRadius && isInteracting) {
+                    evaluateInteractiveChomp(wordObj, trackerX, trackerY);
+                }
+            });
+
+            canvasCtx.save();
+            if (gameConfig.selectedControl === 'eat') {
+                canvasCtx.translate(trackerX, trackerY);
+                
+                canvasCtx.fillStyle = '#1e1b4b';
+                canvasCtx.beginPath();
+                canvasCtx.arc(-24, -20, 14, 0, Math.PI * 2);
+                canvasCtx.arc(24, -20, 14, 0, Math.PI * 2);
+                canvasCtx.fill();
+
+                canvasCtx.fillStyle = '#ffffff';
+                canvasCtx.beginPath();
+                canvasCtx.arc(0, 0, 28, 0, Math.PI * 2);
+                canvasCtx.fill();
+                canvasCtx.lineWidth = 3;
+                canvasCtx.strokeStyle = '#4a3728';
+                canvasCtx.stroke();
+
+                canvasCtx.fillStyle = '#1e1b4b';
+                canvasCtx.beginPath();
+                canvasCtx.arc(-11, -5, 7, 0, Math.PI * 2);
+                canvasCtx.arc(11, -5, 7, 0, Math.PI * 2);
+                canvasCtx.fill();
+                canvasCtx.fillStyle = '#ffffff';
+                canvasCtx.beginPath();
+                canvasCtx.arc(-9, -7, 3, 0, Math.PI * 2);
+                canvasCtx.arc(9, -7, 3, 0, Math.PI * 2);
+                canvasCtx.fill();
+
+                canvasCtx.fillStyle = isInteracting ? '#ef4444' : '#1e1b4b';
+                canvasCtx.beginPath();
+                if (isInteracting) {
+                    canvasCtx.arc(0, 12, chompRadius * 0.4, 0, Math.PI * 2);
+                } else {
+                    canvasCtx.arc(0, 12, 5, 0, Math.PI * 2);
+                }
+                canvasCtx.fill();
+            } else {
+                canvasCtx.strokeStyle = isInteracting ? '#ef4444' : '#3b82f6';
+                canvasCtx.lineWidth = 4;
+                canvasCtx.beginPath();
+                canvasCtx.arc(trackerX, trackerY, chompRadius, 0, Math.PI * 2);
+                canvasCtx.stroke();
+                
+                canvasCtx.fillStyle = isInteracting ? 'rgba(239, 68, 68, 0.25)' : 'rgba(59, 130, 246, 0.2)';
+                canvasCtx.fill();
+            }
+            canvasCtx.restore();
+
+            particles.forEach((p, idx) => {
+                p.update();
+                p.draw(canvasCtx);
+                if (p.alpha <= 0) particles.splice(idx, 1);
+            });
+        }
+
+        function evaluateInteractiveChomp(wordObj, x, y) {
+            const popup = document.getElementById('feedbackPopup');
+            
+            if (wordObj.word === targetWordObj.word) {
+                gameConfig.score += 10;
+                AudioEngine.playHit();
+                
+                registerMasteredWord(wordObj);
+
+                for (let i = 0; i < 15; i++) {
+                    particles.push(new Particle(x, y, wordObj.word[Math.floor(Math.random() * wordObj.word.length)], "#10B981"));
+                }
+
+                popup.innerText = "YUMMY! 😋 正确";
+                popup.className = "absolute text-5xl font-extrabold text-green-500 scale-125 z-30 pointer-events-none drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]";
+                
+                const vocabulary = vocabularyDatabase[gameConfig.selectedLevel]?.[gameConfig.selectedStream] || vocabularyDatabase['P5']['standard'];
+                
+                const activeWordStrings = activeWords.map(w => w.word);
+                let freshWord = vocabulary[Math.floor(Math.random() * vocabulary.length)];
+                
+                let attempts = 0;
+                while (activeWordStrings.includes(freshWord.word) && attempts < 30) {
+                    freshWord = vocabulary[Math.floor(Math.random() * vocabulary.length)];
+                    attempts++;
+                }
+                
+                wordObj.word = freshWord.word;
+                wordObj.pinyin = freshWord.pinyin;
+                wordObj.translation = freshWord.translation;
+                wordObj.x = Math.random() * (canvasElement.width - 200) + 100;
+                wordObj.y = Math.random() * (canvasElement.height - 200) + 100;
+                wordObj.color = getRandomBubbleColor();
+
+                if (gameConfig.selectedRule === 'points') {
+                    document.getElementById('metricDisplay').innerText = `${gameConfig.score}/150`;
+                    if (gameConfig.score >= 150) {
+                        endGame();
+                        return;
+                    }
+                }
+
+                gameConfig.gameLevel = Math.floor(gameConfig.score / 50) + 1;
+                document.getElementById('gameLevelDisplay').innerText = gameConfig.gameLevel;
+
+                const currentLevelThreshold = Math.floor(gameConfig.score / 50) * 50;
+                if (currentLevelThreshold > gameConfig.lastBonusThreshold && currentLevelThreshold > 0) {
+                    gameConfig.lastBonusThreshold = currentLevelThreshold;
+                    triggerPandaGoldRushBonus();
+                } else {
+                    pickNewTargetWord();
+                }
+
+            } else {
+                gameConfig.score = Math.max(0, gameConfig.score - 5);
+                AudioEngine.playMiss();
+                
+                popup.innerText = "YUCKY! 🤢 错误";
+                popup.className = "absolute text-5xl font-extrabold text-red-500 scale-125 z-30 pointer-events-none drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]";
+
+                for (let i = 0; i < 8; i++) {
+                    particles.push(new Particle(x, y, "💥", "#EF4444"));
+                }
+
+                if (gameConfig.selectedRule === 'points') {
+                    document.getElementById('metricDisplay').innerText = `${gameConfig.score}/150`;
+                }
+            }
+
+            document.getElementById('scoreDisplay').innerText = gameConfig.score;
+            
+            popup.style.transform = "scale(1)";
+            setTimeout(() => {
+                popup.style.transform = "scale(0)";
+            }, 800);
+            
+            pointerPos.clicked = false;
+            mouthPosition.isOpen = false;
+        }
+
+        // LEVEL UP: "PANDA GOLD RUSH" MINI PRIZE GAME
+        let bonusSecondsLeft = 15;
+        let bonusTimerInterval = null;
+
+        function triggerPandaGoldRushBonus() {
+            gameConfig.gameState = 'bonus';
+            bonusSecondsLeft = 15;
+            fallingItems = [];
+
+            AudioEngine.playLevelUp();
+            speakWord("彩蛋时间！熊猫接金币！");
+
+            document.getElementById('targetWordText').innerText = "🐼 熊猫接金币！";
+            document.getElementById('targetWordTranslation').innerText = "左右滑动接金币，千万躲避炸弹！";
+            document.getElementById('placardCategory').innerText = "🎁 奖励关卡 BONUS STAGE:";
+
+            document.getElementById('metricLabel').innerText = "时间 BONUS:";
+            document.getElementById('metricDisplay').innerText = bonusSecondsLeft;
+
+            clearInterval(timerInterval);
+
+            bonusTimerInterval = setInterval(() => {
+                bonusSecondsLeft--;
+                document.getElementById('metricDisplay').innerText = bonusSecondsLeft;
+                
+                if (bonusSecondsLeft <= 0) {
+                    clearInterval(bonusTimerInterval);
+                    returnToVocabularyPractice();
+                }
+            }, 1000);
+        }
+
+        function runGoldRushMiniGameLoop() {
+            let targetX = 0;
+
+            if (gameConfig.selectedControl === 'eat') {
+                targetX = mouthPosition.x;
+            } else {
+                targetX = pointerPos.x;
+            }
+
+            basketPosition.y = canvasElement.height - 80;
+            basketPosition.x += (targetX - basketPosition.x) * 0.25;
+
+            if (basketPosition.x < basketPosition.width / 2) basketPosition.x = basketPosition.width / 2;
+            if (basketPosition.x > canvasElement.width - basketPosition.width / 2) {
+                basketPosition.x = canvasElement.width - basketPosition.width / 2;
+            }
+
+            if (Math.random() < 0.08) {
+                fallingItems.push(new DropItem(canvasElement.width));
+            }
+
+            for (let i = fallingItems.length - 1; i >= 0; i--) {
+                const item = fallingItems[i];
+                item.update();
+                item.draw(canvasCtx);
+
+                const basketTop = basketPosition.y - basketPosition.height / 2;
+                const basketLeft = basketPosition.x - basketPosition.width / 2;
+                const basketRight = basketPosition.x + basketPosition.width / 2;
+
+                if (item.y + item.radius >= basketTop && item.y - item.radius <= basketPosition.y + basketPosition.height / 2) {
+                    if (item.x >= basketLeft && item.x <= basketRight) {
+                        fallingItems.splice(i, 1);
+                        
+                        if (item.isBomb) {
+                            gameConfig.score = Math.max(0, gameConfig.score - 15);
+                            AudioEngine.playExplosion();
+                            triggerScreenShake();
+                            
+                            for (let p = 0; p < 12; p++) {
+                                particles.push(new Particle(item.x, item.y, "🔥", "#f97316"));
+                            }
+                        } else {
+                            gameConfig.score += 10;
+                            AudioEngine.playCoin();
+                            
+                            for (let p = 0; p < 6; p++) {
+                                particles.push(new Particle(item.x, item.y, "✨", "#eab308"));
+                            }
+                        }
+                        document.getElementById('scoreDisplay').innerText = gameConfig.score;
+                        continue;
+                    }
+                }
+
+                if (item.y > canvasElement.height + 30) {
+                    fallingItems.splice(i, 1);
+                }
+            }
+
+            canvasCtx.save();
+            canvasCtx.translate(basketPosition.x, basketPosition.y);
+            
+            canvasCtx.fillStyle = '#854d0e'; 
+            canvasCtx.beginPath();
+            canvasCtx.roundRect(
+                -basketPosition.width / 2, 
+                -basketPosition.height / 2, 
+                basketPosition.width, 
+                basketPosition.height, 
+                [0, 0, 16, 16]
+            );
+            canvasCtx.fill();
+            canvasCtx.lineWidth = 4;
+            canvasCtx.strokeStyle = '#451a03';
+            canvasCtx.stroke();
+
+            canvasCtx.strokeStyle = '#a16207';
+            canvasCtx.lineWidth = 2.5;
+            canvasCtx.beginPath();
+            for (let offset = -basketPosition.width / 2 + 15; offset < basketPosition.width / 2; offset += 20) {
+                canvasCtx.moveTo(offset, -basketPosition.height / 2);
+                canvasCtx.lineTo(offset + 6, basketPosition.height / 2);
+            }
+            canvasCtx.stroke();
+
+            canvasCtx.fillStyle = '#b45309';
+            canvasCtx.fillRect(
+                -basketPosition.width / 2 - 4, 
+                -basketPosition.height / 2 - 4, 
+                basketPosition.width + 8, 
+                8
+            );
+            canvasCtx.strokeRect(
+                -basketPosition.width / 2 - 4, 
+                -basketPosition.height / 2 - 4, 
+                basketPosition.width + 8, 
+                8
+            );
+            
+            canvasCtx.fillStyle = '#ffffff';
+            canvasCtx.beginPath();
+            canvasCtx.arc(0, 4, 10, 0, Math.PI * 2);
+            canvasCtx.fill();
+            canvasCtx.lineWidth = 1.5;
+            canvasCtx.strokeStyle = '#451a03';
+            canvasCtx.stroke();
+            
+            canvasCtx.fillStyle = '#1e1b4b';
+            canvasCtx.beginPath();
+            canvasCtx.arc(-8, -4, 4, 0, Math.PI * 2);
+            canvasCtx.arc(8, -4, 4, 0, Math.PI * 2);
+            canvasCtx.fill();
+            
+            canvasCtx.restore();
+
+            particles.forEach((p, idx) => {
+                p.update();
+                p.draw(canvasCtx);
+                if (p.alpha <= 0) particles.splice(idx, 1);
+            });
+        }
+
+        function returnToVocabularyPractice() {
+            gameConfig.gameState = 'playing';
+            
+            if (gameConfig.selectedRule === 'timed') {
+                gameConfig.metricVal = 30; 
+                document.getElementById('metricLabel').innerText = "时间 TIMER:";
+                document.getElementById('metricDisplay').innerText = gameConfig.metricVal;
+                
+                timerInterval = setInterval(() => {
+                    if (gameConfig.gameState === 'playing') {
+                        gameConfig.metricVal--;
+                        document.getElementById('metricDisplay').innerText = gameConfig.metricVal;
+                        if (gameConfig.metricVal <= 0) endGame();
+                    }
+                }, 1000);
+            } else if (gameConfig.selectedRule === 'points') {
+                document.getElementById('metricLabel').innerText = "目标 GOAL:";
+                document.getElementById('metricDisplay').innerText = `${gameConfig.score}/150`;
+            }
+
+            pickNewTargetWord();
+            if (gameConfig.selectedControl !== 'eat') {
+                start2DAnimationLoop(); 
+            }
+        }
+
+        // ADD CHOMPED VOCABULARY CARD TO SIDEBAR DRAWER
+        function registerMasteredWord(wordObj) {
+            if (gameConfig.masteredWords.has(wordObj.word)) return;
+            
+            gameConfig.masteredWords.add(wordObj.word);
+            
+            const historyList = document.getElementById('historyList');
+            const emptyHistoryMsg = document.getElementById('emptyHistoryMsg');
+            
+            if (emptyHistoryMsg) {
+                emptyHistoryMsg.remove();
+            }
+
+            const item = document.createElement('div');
+            item.className = "bg-white p-3 rounded-xl border-2 border-orange-200 shadow-sm flex items-center justify-between bounce-hover transition-all";
+            item.innerHTML = `
+                <div>
+                    <h4 class="text-xl font-bold text-stone-800">${wordObj.word}</h4>
+                    <p class="text-xs text-stone-500">${wordObj.pinyin}</p>
+                    <p class="text-sm text-stone-600 font-semibold">${wordObj.translation}</p>
+                </div>
+                <button onclick="speakWord('${wordObj.word}')" class="text-orange-500 hover:text-orange-600 text-lg w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center border border-orange-100 shadow-inner">
+                    <i class="fa-solid fa-volume-high"></i>
+                </button>
+            `;
+            historyList.appendChild(item);
+        }
+
+        // FINAL GAME OVER SCREEN
+        function endGame() {
+            stopGameAndTracking();
+            
+            document.getElementById('gameArea').classList.add('hidden');
+            document.getElementById('gameOverScreen').classList.remove('hidden');
+            
+            document.getElementById('endScore').innerText = gameConfig.score;
+            document.getElementById('endMasteredCount').innerText = gameConfig.masteredWords.size;
+
+            if (gameConfig.score >= 120) {
+                document.getElementById('endTitle').innerText = "👑 华文特级大师！";
+                document.getElementById('endSubtitle').innerText = "你完全征服了所有的测试词汇！";
+            } else if (gameConfig.score >= 60) {
+                document.getElementById('endTitle').innerText = "🏆 精彩极了！";
+                document.getElementById('endSubtitle').innerText = "你完成了一场极佳的华文挑战。";
+            } else {
+                document.getElementById('endTitle').innerText = "💪 继续加油！";
+                document.getElementById('endSubtitle').innerText = "多练习几次，你一定能掌握更多词汇！";
+            }
+        }
+
+        function stopGameAndTracking() {
+            gameConfig.gameState = 'gameover';
+            clearInterval(timerInterval);
+            clearInterval(bonusTimerInterval);
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        }
+    </script>
 </body>
 </html>
